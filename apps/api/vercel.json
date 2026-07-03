@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "buildCommand": "npm run build",
+  "buildCommand": "cd ../.. && npm run build -w packages/shared && cd apps/api && npx prisma generate && npm run build",
   "installCommand": "npm install",
   "rewrites": [{ "source": "/(.*)", "destination": "/api/index" }]
 }
