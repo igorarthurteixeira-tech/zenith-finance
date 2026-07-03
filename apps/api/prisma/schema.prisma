@@ -1,0 +1,103 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum AccountType {
+  PESSOAL
+  EMPRESARIAL
+}
+
+enum TransactionType {
+  INCOME
+  EXPENSE
+}
+
+model User {
+  id            String         @id @default(uuid())
+  email         String         @unique
+  passwordHash  String
+  name          String
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  accounts      Account[]
+  refreshTokens RefreshToken[]
+}
+
+model RefreshToken {
+  id        String    @id @default(uuid())
+  tokenHash String
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId])
+}
+
+model Account {
+  id            String        @id @default(uuid())
+  name          String
+  type          AccountType
+  ownerId       String
+  owner         User          @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  categories    Category[]
+  transactions  Transaction[]
+  transfersFrom Transfer[]    @relation("fromAccount")
+  transfersTo   Transfer[]    @relation("toAccount")
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  @@index([ownerId])
+}
+
+model Category {
+  id           String          @id @default(uuid())
+  name         String
+  type         TransactionType
+  accountId    String
+  account      Account         @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  transactions Transaction[]
+  createdAt    DateTime        @default(now())
+
+  @@unique([accountId, name, type])
+}
+
+model Transaction {
+  id          String          @id @default(uuid())
+  description String
+  amount      Decimal         @db.Decimal(14, 2)
+  type        TransactionType
+  date        DateTime
+  accountId   String
+  account     Account         @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  categoryId  String?
+  category    Category?       @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  transferOut Transfer? @relation("originTransaction")
+  transferIn  Transfer? @relation("destinationTransaction")
+
+  @@index([accountId, date])
+}
+
+model Transfer {
+  id                       String      @id @default(uuid())
+  fromAccountId            String
+  fromAccount              Account     @relation("fromAccount", fields: [fromAccountId], references: [id], onDelete: Cascade)
+  toAccountId              String
+  toAccount                Account     @relation("toAccount", fields: [toAccountId], references: [id], onDelete: Cascade)
+  amount                   Decimal     @db.Decimal(14, 2)
+  description              String?
+  originTransactionId      String      @unique
+  originTransaction        Transaction @relation("originTransaction", fields: [originTransactionId], references: [id], onDelete: Cascade)
+  destinationTransactionId String      @unique
+  destinationTransaction   Transaction @relation("destinationTransaction", fields: [destinationTransactionId], references: [id], onDelete: Cascade)
+  createdAt                DateTime    @default(now())
+}
