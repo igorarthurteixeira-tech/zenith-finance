@@ -8,6 +8,7 @@ import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcryptjs';
 import { AccountType } from '@zenith/shared';
 import { PrismaService } from '../prisma/prisma.service';
+import { seedDefaultCategories } from '../categories/default-categories';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 
@@ -45,7 +46,14 @@ export class AuthService {
           create: { name: 'Pessoal', type: AccountType.PESSOAL },
         },
       },
+      include: { accounts: true },
     });
+
+    await seedDefaultCategories(
+      this.prisma,
+      user.accounts[0].id,
+      AccountType.PESSOAL,
+    );
 
     return this.issueTokens(user.id, user.email);
   }

@@ -29,7 +29,14 @@ export function RegisterPage() {
   return (
     <div className="auth-page">
       <form className="auth-form" onSubmit={handleSubmit}>
+        <div className="auth-brand">
+          <span className="app-logo-mark">Z</span>
+          <span className="app-logo-text">Zenith Finance</span>
+        </div>
         <h1>Criar conta</h1>
+        <p className="auth-subtitle">
+          Comece a organizar suas finanças pessoais e empresariais.
+        </p>
         {error && <p className="error">{error}</p>}
         <label>
           Nome
@@ -54,10 +61,10 @@ export function RegisterPage() {
             minLength={8}
           />
         </label>
-        <button type="submit" disabled={isSubmitting}>
+        <button type="submit" className="btn-primary btn-block" disabled={isSubmitting}>
           {isSubmitting ? 'Criando...' : 'Criar conta'}
         </button>
-        <p>
+        <p className="auth-footer-text">
           Já tem conta? <Link to="/login">Entrar</Link>
         </p>
       </form>

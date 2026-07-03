@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { seedDefaultCategories } from '../categories/default-categories';
 import { CreateAccountDto } from './dto/create-account.dto';
 import { UpdateAccountDto } from './dto/update-account.dto';
 
@@ -14,10 +15,12 @@ export class AccountsService {
     });
   }
 
-  create(userId: string, dto: CreateAccountDto) {
-    return this.prisma.account.create({
+  async create(userId: string, dto: CreateAccountDto) {
+    const account = await this.prisma.account.create({
       data: { name: dto.name, type: dto.type, ownerId: userId },
     });
+    await seedDefaultCategories(this.prisma, account.id, dto.type);
+    return account;
   }
 
   update(accountId: string, dto: UpdateAccountDto) {

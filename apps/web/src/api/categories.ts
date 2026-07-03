@@ -8,4 +8,8 @@ export const categoriesApi = {
     apiClient.post<CategoryDto>(`/accounts/${accountId}/categories`, input),
   remove: (accountId: string, categoryId: string) =>
     apiClient.delete<void>(`/accounts/${accountId}/categories/${categoryId}`),
+  seedDefaults: (accountId: string) =>
+    apiClient.post<CategoryDto[]>(
+      `/accounts/${accountId}/categories/seed-defaults`,
+    ),
 };

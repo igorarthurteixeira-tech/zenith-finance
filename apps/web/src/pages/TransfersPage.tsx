@@ -50,63 +50,74 @@ export function TransfersPage() {
 
   return (
     <div>
-      <h2>Transferências — {activeAccount.name}</h2>
+      <div className="page-header">
+        <h2>Transferências</h2>
+        <p className="page-subtitle">{activeAccount.name}</p>
+      </div>
 
-      {otherAccounts.length === 0 ? (
-        <p>Crie outra conta para poder transferir entre elas.</p>
-      ) : (
-        <form onSubmit={handleSubmit} className="inline-form">
-          <select value={toAccountId} onChange={(e) => setToAccountId(e.target.value)}>
-            <option value="">Para qual conta?</option>
-            {otherAccounts.map((account) => (
-              <option key={account.id} value={account.id}>
-                {account.name}
-              </option>
+      <div className="card">
+        {otherAccounts.length === 0 ? (
+          <p className="muted">Crie outra conta para poder transferir entre elas.</p>
+        ) : (
+          <form onSubmit={handleSubmit} className="inline-form">
+            <select value={toAccountId} onChange={(e) => setToAccountId(e.target.value)}>
+              <option value="">Para qual conta?</option>
+              {otherAccounts.map((account) => (
+                <option key={account.id} value={account.id}>
+                  {account.name}
+                </option>
+              ))}
+            </select>
+            <input
+              placeholder="Valor"
+              type="number"
+              step="0.01"
+              min="0"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+            />
+            <input
+              placeholder="Descrição (opcional)"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+            />
+            <button type="submit" className="btn-primary" disabled={createMutation.isPending}>
+              Transferir
+            </button>
+          </form>
+        )}
+        {error && <p className="error">{error}</p>}
+      </div>
+
+      <div className="card">
+        <h3 className="card-title">Histórico</h3>
+        {transfersQuery.isLoading ? (
+          <p className="muted">Carregando...</p>
+        ) : transfersQuery.data && transfersQuery.data.length > 0 ? (
+          <ul className="transaction-list">
+            {transfersQuery.data.map((transfer) => (
+              <li key={transfer.id}>
+                <div className="transaction-info">
+                  <span className="transaction-description">
+                    {transfer.fromAccountId === activeAccount.id ? 'Enviado' : 'Recebido'}
+                  </span>
+                  <span className="transaction-date">
+                    {new Date(transfer.createdAt).toLocaleDateString('pt-BR')}
+                  </span>
+                </div>
+                <span>
+                  {Number(transfer.amount).toLocaleString('pt-BR', {
+                    style: 'currency',
+                    currency: 'BRL',
+                  })}
+                </span>
+              </li>
             ))}
-          </select>
-          <input
-            placeholder="Valor"
-            type="number"
-            step="0.01"
-            min="0"
-            value={amount}
-            onChange={(e) => setAmount(e.target.value)}
-          />
-          <input
-            placeholder="Descrição (opcional)"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-          />
-          <button type="submit" disabled={createMutation.isPending}>
-            Transferir
-          </button>
-        </form>
-      )}
-      {error && <p className="error">{error}</p>}
-
-      <h3>Histórico</h3>
-      {transfersQuery.isLoading ? (
-        <p>Carregando...</p>
-      ) : transfersQuery.data && transfersQuery.data.length > 0 ? (
-        <ul className="transaction-list">
-          {transfersQuery.data.map((transfer) => (
-            <li key={transfer.id}>
-              <span>{new Date(transfer.createdAt).toLocaleDateString('pt-BR')}</span>
-              <span>
-                {transfer.fromAccountId === activeAccount.id ? 'Enviado' : 'Recebido'}
-              </span>
-              <span>
-                {Number(transfer.amount).toLocaleString('pt-BR', {
-                  style: 'currency',
-                  currency: 'BRL',
-                })}
-              </span>
-            </li>
-          ))}
-        </ul>
-      ) : (
-        <p>Nenhuma transferência ainda.</p>
-      )}
+          </ul>
+        ) : (
+          <p className="muted">Nenhuma transferência ainda.</p>
+        )}
+      </div>
     </div>
   );
 }

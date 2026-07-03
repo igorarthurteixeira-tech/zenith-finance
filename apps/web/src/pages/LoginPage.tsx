@@ -28,7 +28,12 @@ export function LoginPage() {
   return (
     <div className="auth-page">
       <form className="auth-form" onSubmit={handleSubmit}>
-        <h1>Entrar</h1>
+        <div className="auth-brand">
+          <span className="app-logo-mark">Z</span>
+          <span className="app-logo-text">Zenith Finance</span>
+        </div>
+        <h1>Bem-vindo de volta</h1>
+        <p className="auth-subtitle">Entre para continuar organizando suas finanças.</p>
         {error && <p className="error">{error}</p>}
         <label>
           Email
@@ -49,10 +54,10 @@ export function LoginPage() {
             minLength={8}
           />
         </label>
-        <button type="submit" disabled={isSubmitting}>
+        <button type="submit" className="btn-primary btn-block" disabled={isSubmitting}>
           {isSubmitting ? 'Entrando...' : 'Entrar'}
         </button>
-        <p>
+        <p className="auth-footer-text">
           Não tem conta? <Link to="/register">Cadastre-se</Link>
         </p>
       </form>

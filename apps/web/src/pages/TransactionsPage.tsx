@@ -14,13 +14,22 @@ export function TransactionsPage() {
 
   return (
     <div>
-      <h2>Transações — {activeAccount.name}</h2>
-      <TransactionForm categories={categories} onSubmit={create} />
-      {isLoading ? (
-        <p>Carregando...</p>
-      ) : (
-        <TransactionList transactions={transactions} onRemove={remove} />
-      )}
+      <div className="page-header">
+        <h2>Transações</h2>
+        <p className="page-subtitle">{activeAccount.name}</p>
+      </div>
+
+      <div className="card">
+        <TransactionForm categories={categories} onSubmit={create} />
+      </div>
+
+      <div className="card">
+        {isLoading ? (
+          <p className="muted">Carregando...</p>
+        ) : (
+          <TransactionList transactions={transactions} onRemove={remove} />
+        )}
+      </div>
     </div>
   );
 }

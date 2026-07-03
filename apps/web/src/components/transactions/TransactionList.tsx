@@ -8,15 +8,17 @@ interface TransactionListProps {
 
 export function TransactionList({ transactions, onRemove }: TransactionListProps) {
   if (transactions.length === 0) {
-    return <p>Nenhuma transação ainda.</p>;
+    return <p className="muted">Nenhuma transação ainda.</p>;
   }
 
   return (
     <ul className="transaction-list">
       {transactions.map((t) => (
         <li key={t.id}>
-          <span>{formatDateOnly(t.date)}</span>
-          <span>{t.description}</span>
+          <div className="transaction-info">
+            <span className="transaction-description">{t.description}</span>
+            <span className="transaction-date">{formatDateOnly(t.date)}</span>
+          </div>
           <span className={t.type === TransactionType.INCOME ? 'positive' : 'negative'}>
             {t.type === TransactionType.INCOME ? '+' : '-'}
             {Number(t.amount).toLocaleString('pt-BR', {
@@ -24,8 +26,8 @@ export function TransactionList({ transactions, onRemove }: TransactionListProps
               currency: 'BRL',
             })}
           </span>
-          <button type="button" onClick={() => onRemove(t.id)}>
-            Remover
+          <button type="button" className="btn-icon" onClick={() => onRemove(t.id)} aria-label="Remover">
+            ×
           </button>
         </li>
       ))}

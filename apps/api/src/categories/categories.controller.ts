@@ -30,6 +30,11 @@ export class CategoriesController {
     return this.categoriesService.create(accountId, dto);
   }
 
+  @Post('seed-defaults')
+  seedDefaults(@Param('accountId') accountId: string) {
+    return this.categoriesService.seedDefaults(accountId);
+  }
+
   @Delete(':categoryId')
   remove(@Param('categoryId') categoryId: string) {
     return this.categoriesService.remove(categoryId);

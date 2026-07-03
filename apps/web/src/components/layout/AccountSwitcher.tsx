@@ -19,39 +19,54 @@ export function AccountSwitcher() {
 
   return (
     <div className="account-switcher">
-      <select
-        value={activeAccount?.id ?? ''}
-        onChange={(e) => setActiveAccountId(e.target.value)}
-      >
-        {accounts.map((account) => (
-          <option key={account.id} value={account.id}>
-            {account.name} ({account.type === AccountType.PESSOAL ? 'Pessoal' : 'Empresarial'})
-          </option>
-        ))}
-      </select>
+      <div className="account-select-wrap">
+        <select
+          className="account-select"
+          value={activeAccount?.id ?? ''}
+          onChange={(e) => setActiveAccountId(e.target.value)}
+        >
+          {accounts.map((account) => (
+            <option key={account.id} value={account.id}>
+              {account.name} · {account.type === AccountType.PESSOAL ? 'Pessoal' : 'Empresarial'}
+            </option>
+          ))}
+        </select>
+      </div>
 
       {isCreating ? (
         <form onSubmit={handleCreate} className="account-switcher-form">
           <input
+            className="input-sm"
             placeholder="Nome da conta"
             value={newName}
             onChange={(e) => setNewName(e.target.value)}
             autoFocus
           />
           <select
+            className="input-sm"
             value={newType}
             onChange={(e) => setNewType(e.target.value as AccountType)}
           >
             <option value={AccountType.PESSOAL}>Pessoal</option>
             <option value={AccountType.EMPRESARIAL}>Empresarial</option>
           </select>
-          <button type="submit">Criar</button>
-          <button type="button" onClick={() => setIsCreating(false)}>
+          <button type="submit" className="btn-primary btn-sm">
+            Criar
+          </button>
+          <button
+            type="button"
+            className="btn-ghost btn-sm"
+            onClick={() => setIsCreating(false)}
+          >
             Cancelar
           </button>
         </form>
       ) : (
-        <button type="button" onClick={() => setIsCreating(true)}>
+        <button
+          type="button"
+          className="btn-secondary btn-sm"
+          onClick={() => setIsCreating(true)}
+        >
           + Nova conta
         </button>
       )}

@@ -24,10 +24,17 @@ export function useCategories(accountId: string | null) {
     onSuccess: () => queryClient.invalidateQueries({ queryKey }),
   });
 
+  const seedDefaultsMutation = useMutation({
+    mutationFn: () => categoriesApi.seedDefaults(accountId!),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey }),
+  });
+
   return {
     categories: query.data ?? [],
     isLoading: query.isLoading,
     create: createMutation.mutateAsync,
     remove: removeMutation.mutateAsync,
+    seedDefaults: seedDefaultsMutation.mutateAsync,
+    isSeedingDefaults: seedDefaultsMutation.isPending,
   };
 }
