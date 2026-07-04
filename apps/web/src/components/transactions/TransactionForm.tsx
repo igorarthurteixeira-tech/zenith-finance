@@ -21,9 +21,17 @@ interface TransactionFormProps {
   }) => Promise<unknown>;
   onCancel?: () => void;
   initialValues?: TransactionDto;
+  defaultWalletId?: string;
 }
 
-export function TransactionForm({ categories, wallets, onSubmit, onCancel, initialValues }: TransactionFormProps) {
+export function TransactionForm({
+  categories,
+  wallets,
+  onSubmit,
+  onCancel,
+  initialValues,
+  defaultWalletId,
+}: TransactionFormProps) {
   const isEditing = !!initialValues;
   const { isPending, run } = useAsyncAction();
 
@@ -34,7 +42,9 @@ export function TransactionForm({ categories, wallets, onSubmit, onCancel, initi
     initialValues ? toDatetimeLocalValue(new Date(initialValues.date)) : toDatetimeLocalValue(new Date()),
   );
   const [categoryId, setCategoryId] = useState(initialValues?.categoryId ?? '');
-  const [walletId, setWalletId] = useState(initialValues?.walletId ?? (wallets[0]?.id ?? ''));
+  const [walletId, setWalletId] = useState(
+    initialValues?.walletId ?? defaultWalletId ?? (wallets[0]?.id ?? ''),
+  );
 
   useEffect(() => {
     if (initialValues) {
@@ -46,6 +56,13 @@ export function TransactionForm({ categories, wallets, onSubmit, onCancel, initi
       setWalletId(initialValues.walletId ?? wallets[0]?.id ?? '');
     }
   }, [initialValues, wallets]);
+
+  useEffect(() => {
+    if (!isEditing && defaultWalletId) {
+      setWalletId(defaultWalletId);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [defaultWalletId]);
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
