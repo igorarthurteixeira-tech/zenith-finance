@@ -6,6 +6,7 @@ import {
   currentOpenInvoicePeriod,
   addMonthsToPeriod,
   invoicePeriodLabel,
+  periodOfDate,
   type CategoryDto,
   type WalletDto,
   type TransactionDto,
@@ -111,8 +112,11 @@ export function TransactionForm({
     event.preventDefault();
     if (!description.trim() || !amount || !walletId) return;
 
-    if (isCardWallet && isInstallmentPurchase && totalInstallmentsNum > 1 && onSubmitInstallments) {
+    if (isInstallmentPurchase && totalInstallmentsNum > 1 && onSubmitInstallments) {
       await run(async () => {
+        const resolvedStartPeriod = isCardWallet
+          ? invoicePeriod
+          : periodOfDate(new Date(date));
         await onSubmitInstallments({
           description,
           walletId,
@@ -123,7 +127,7 @@ export function TransactionForm({
           amount,
           totalInstallments: totalInstallmentsNum,
           startInstallment: startInstallmentNum,
-          startInvoicePeriod: invoicePeriod,
+          startInvoicePeriod: resolvedStartPeriod,
           countPastInstallments: startInstallmentNum > 1 ? countPastInstallments : true,
         });
         setDescription('');
@@ -207,7 +211,7 @@ export function TransactionForm({
         </select>
       )}
 
-      {isCardWallet && !isEditing && onSubmitInstallments && (
+      {!isEditing && onSubmitInstallments && (
         <label className="installment-toggle">
           <input
             type="checkbox"
@@ -215,11 +219,11 @@ export function TransactionForm({
             onChange={(e) => setIsInstallmentPurchase(e.target.checked)}
             disabled={isPending}
           />
-          Compra parcelada
+          Compra parcelada / despesa recorrente passada
         </label>
       )}
 
-      {isCardWallet && !isEditing && isInstallmentPurchase && onSubmitInstallments && (
+      {!isEditing && isInstallmentPurchase && onSubmitInstallments && (
         <div className="installment-panel">
           <label className="input-label">
             O valor digitado é
@@ -244,7 +248,7 @@ export function TransactionForm({
             />
           </label>
           <label className="input-label">
-            Essa fatura é a parcela nº
+            {isCardWallet ? 'Essa fatura é a parcela nº' : 'A data acima é a parcela nº'}
             <input
               type="number"
               min={1}
@@ -263,9 +267,9 @@ export function TransactionForm({
                 disabled={isPending}
               />
               As parcelas 1 a {startInstallmentNum - 1} ainda não foram contabilizadas em nenhum
-              lugar (somar no total das respectivas faturas). Se desmarcar, elas entram só no
+              lugar (somar no total dos respectivos períodos). Se desmarcar, elas entram só no
               histórico, sem somar (use quando já estiverem contabilizadas em outro lugar, como no
-              saldo inicial do cartão).
+              saldo inicial).
             </label>
           )}
         </div>
