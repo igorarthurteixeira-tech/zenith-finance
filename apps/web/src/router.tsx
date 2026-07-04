@@ -3,6 +3,7 @@ import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
 import { AccountProvider } from './context/AccountContext';
 import { AppLayout } from './components/layout/AppLayout';
+import { LoadingScreen } from './components/ui/LoadingScreen';
 import { LoginPage } from './pages/LoginPage';
 import { RegisterPage } from './pages/RegisterPage';
 import { DashboardPage } from './pages/DashboardPage';
@@ -15,7 +16,7 @@ import { GoalsPage } from './pages/GoalsPage';
 
 function ProtectedRoute({ children }: { children: ReactNode }) {
   const { user, isLoading } = useAuth();
-  if (isLoading) return <p>Carregando...</p>;
+  if (isLoading) return <LoadingScreen />;
   if (!user) return <Navigate to="/login" replace />;
   return <AccountProvider>{children}</AccountProvider>;
 }

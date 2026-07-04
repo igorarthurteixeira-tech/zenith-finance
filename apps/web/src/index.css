@@ -1609,3 +1609,50 @@ button[aria-busy='true'] {
 .wallet-back-link:hover {
   text-decoration: underline;
 }
+
+/* ---------- Loading screen ---------- */
+
+.loading-screen {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2rem;
+  background: var(--color-bg);
+}
+
+.loading-screen-logo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.9rem;
+}
+
+.loading-screen-mark {
+  width: 56px;
+  height: 56px;
+  font-size: 1.6rem;
+  border-radius: var(--radius-md);
+  animation: loading-pulse 1.4s ease-in-out infinite;
+}
+
+.loading-screen-text {
+  color: var(--color-text);
+  font-size: 1.15rem;
+}
+
+@keyframes loading-pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.08); opacity: 0.85; }
+}
+
+.loading-screen-spinner {
+  display: inline-block;
+  width: 28px;
+  height: 28px;
+  border: 3px solid var(--color-accent-tint);
+  border-top-color: var(--color-accent);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
