@@ -22,11 +22,14 @@ export function NewCardModal({ parent, onCreate, onClose }: NewCardModalProps) {
     e.preventDefault();
     if (!name.trim()) return;
     await run(async () => {
+      // O campo pede o valor da dívida como número positivo (quanto já se deve);
+      // internamente isso vira saldo negativo, que é como o sistema representa dívida.
+      const debtAmount = initialBalance ? -Math.abs(Number(initialBalance)) : undefined;
       await onCreate({
         name,
         type: WalletType.CARTAO_CREDITO,
         parentWalletId: parent.id,
-        initialBalance: initialBalance || undefined,
+        initialBalance: debtAmount !== undefined ? String(debtAmount) : undefined,
         creditLimit: creditLimit || undefined,
         closingDay: closingDay ? Number(closingDay) : undefined,
         dueDay: dueDay ? Number(dueDay) : undefined,
@@ -46,11 +49,12 @@ export function NewCardModal({ parent, onCreate, onClose }: NewCardModalProps) {
           disabled={isPending}
         />
         <label className="input-label">
-          Fatura em aberto (dívida já existente, se houver)
+          Fatura em aberto (quanto você já deve, se houver)
           <input
-            placeholder="Ex: -350"
+            placeholder="Ex: 350"
             type="number"
             step="0.01"
+            min="0"
             value={initialBalance}
             onChange={(e) => setInitialBalance(e.target.value)}
             disabled={isPending}
