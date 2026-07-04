@@ -41,11 +41,19 @@ export class InvestmentsService {
         ...(dto.liquidity !== undefined && { liquidity: dto.liquidity }),
         ...(dto.principal !== undefined && { principal: dto.principal }),
         ...(dto.rate !== undefined && { rate: dto.rate }),
-        ...(dto.cdbModalidade !== undefined && { cdbModalidade: dto.cdbModalidade }),
+        ...(dto.cdbModalidade !== undefined && {
+          cdbModalidade: dto.cdbModalidade,
+        }),
         ...(dto.cdiRate !== undefined && { cdiRate: dto.cdiRate }),
-        ...(dto.cardWalletId !== undefined && { cardWalletId: dto.cardWalletId }),
-        ...(dto.startDate !== undefined && { startDate: new Date(dto.startDate) }),
-        ...(dto.maturityDate !== undefined && { maturityDate: dto.maturityDate ? new Date(dto.maturityDate) : null }),
+        ...(dto.cardWalletId !== undefined && {
+          cardWalletId: dto.cardWalletId,
+        }),
+        ...(dto.startDate !== undefined && {
+          startDate: new Date(dto.startDate),
+        }),
+        ...(dto.maturityDate !== undefined && {
+          maturityDate: dto.maturityDate ? new Date(dto.maturityDate) : null,
+        }),
       },
     });
   }

@@ -3,6 +3,11 @@ import { TransactionType, type CategoryDto, type WalletDto, type TransactionDto 
 import { Spinner } from '../ui/Spinner';
 import { useAsyncAction } from '../../hooks/useAsyncAction';
 
+function toDatetimeLocalValue(date: Date): string {
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+}
+
 interface TransactionFormProps {
   categories: CategoryDto[];
   wallets: WalletDto[];
@@ -26,7 +31,7 @@ export function TransactionForm({ categories, wallets, onSubmit, onCancel, initi
   const [amount, setAmount] = useState(initialValues?.amount ?? '');
   const [type, setType] = useState<TransactionType>(initialValues?.type ?? TransactionType.EXPENSE);
   const [date, setDate] = useState(() =>
-    initialValues ? initialValues.date.slice(0, 10) : new Date().toISOString().slice(0, 10),
+    initialValues ? toDatetimeLocalValue(new Date(initialValues.date)) : toDatetimeLocalValue(new Date()),
   );
   const [categoryId, setCategoryId] = useState(initialValues?.categoryId ?? '');
   const [walletId, setWalletId] = useState(initialValues?.walletId ?? (wallets[0]?.id ?? ''));
@@ -36,7 +41,7 @@ export function TransactionForm({ categories, wallets, onSubmit, onCancel, initi
       setDescription(initialValues.description);
       setAmount(initialValues.amount);
       setType(initialValues.type);
-      setDate(initialValues.date.slice(0, 10));
+      setDate(toDatetimeLocalValue(new Date(initialValues.date)));
       setCategoryId(initialValues.categoryId ?? '');
       setWalletId(initialValues.walletId ?? wallets[0]?.id ?? '');
     }
@@ -104,7 +109,7 @@ export function TransactionForm({ categories, wallets, onSubmit, onCancel, initi
           </option>
         ))}
       </select>
-      <input type="date" value={date} onChange={(e) => setDate(e.target.value)} disabled={isPending} />
+      <input type="datetime-local" value={date} onChange={(e) => setDate(e.target.value)} disabled={isPending} />
       <button type="submit" disabled={isPending} aria-busy={isPending}>
         {isPending
           ? <><Spinner /> {isEditing ? 'Salvando…' : 'Adicionando…'}</>

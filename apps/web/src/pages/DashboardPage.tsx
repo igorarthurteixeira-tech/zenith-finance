@@ -1,7 +1,8 @@
 import { TransactionType } from '@zenith/shared';
 import { useAccounts } from '../context/AccountContext';
 import { useTransactions } from '../hooks/useTransactions';
-import { formatDateOnly } from '../utils/formatDate';
+import { useWallets } from '../hooks/useWallets';
+import { formatDateTime } from '../utils/formatDate';
 
 function formatCurrency(value: number) {
   return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
@@ -10,6 +11,7 @@ function formatCurrency(value: number) {
 export function DashboardPage() {
   const { activeAccount } = useAccounts();
   const { transactions, isLoading } = useTransactions(activeAccount?.id ?? null);
+  const { wallets } = useWallets(activeAccount?.id ?? null);
 
   const income = transactions
     .filter((t) => t.type === TransactionType.INCOME)
@@ -17,7 +19,13 @@ export function DashboardPage() {
   const expense = transactions
     .filter((t) => t.type === TransactionType.EXPENSE)
     .reduce((sum, t) => sum + Number(t.amount), 0);
-  const balance = income - expense;
+  // Saldos iniciais (ou dívidas já existentes) entram no saldo total, mas não
+  // são receita nem despesa de fato — por isso ficam de fora de income/expense.
+  const initialBalances = wallets.reduce(
+    (sum, w) => sum + Number(w.initialBalance),
+    0,
+  );
+  const balance = income - expense + initialBalances;
 
   if (!activeAccount) {
     return <p>Nenhuma conta selecionada.</p>;
@@ -57,7 +65,7 @@ export function DashboardPage() {
               <li key={t.id}>
                 <div className="transaction-info">
                   <span className="transaction-description">{t.description}</span>
-                  <span className="transaction-date">{formatDateOnly(t.date)}</span>
+                  <span className="transaction-date">{formatDateTime(t.date)}</span>
                 </div>
                 <span
                   className={

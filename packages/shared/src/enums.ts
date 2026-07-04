@@ -33,3 +33,8 @@ export enum CdbModalidade {
   NORMAL = 'NORMAL',
   LIMITE_GARANTIDO = 'LIMITE_GARANTIDO',
 }
+
+export enum WalletType {
+  CONTA = 'CONTA',
+  CARTAO_CREDITO = 'CARTAO_CREDITO',
+}

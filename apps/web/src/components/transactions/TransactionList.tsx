@@ -4,7 +4,7 @@ import { TransactionForm } from './TransactionForm';
 import { Modal } from '../ui/Modal';
 import { Spinner } from '../ui/Spinner';
 import { useAsyncSet } from '../../hooks/useAsyncAction';
-import { formatDateOnly } from '../../utils/formatDate';
+import { formatDateTime } from '../../utils/formatDate';
 
 interface TransactionListProps {
   transactions: TransactionDto[];
@@ -104,7 +104,7 @@ export function TransactionList({ transactions, categories, wallets, onRemove, o
                 <li key={t.id}>
                   <div className="transaction-info">
                     <span className="transaction-description">{t.description}</span>
-                    <span className="transaction-date">{formatDateOnly(t.date)}</span>
+                    <span className="transaction-date">{formatDateTime(t.date)}</span>
                     {wallets.find((w) => w.id === t.walletId) && (
                       <span className="transaction-wallet">
                         {wallets.find((w) => w.id === t.walletId)?.name}

@@ -7,7 +7,11 @@ import {
   IsUUID,
   MinLength,
 } from 'class-validator';
-import { InvestmentType, InvestmentLiquidity, CdbModalidade } from '@zenith/shared';
+import {
+  InvestmentType,
+  InvestmentLiquidity,
+  CdbModalidade,
+} from '@zenith/shared';
 
 export class CreateInvestmentDto {
   @IsString()

@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { WalletType } from '@zenith/shared';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateWalletDto } from './dto/create-wallet.dto';
 import { UpdateWalletDto } from './dto/update-wallet.dto';
@@ -16,14 +17,30 @@ export class WalletsService {
 
   create(accountId: string, dto: CreateWalletDto) {
     return this.prisma.wallet.create({
-      data: { name: dto.name, accountId },
+      data: {
+        name: dto.name,
+        accountId,
+        type: dto.type ?? WalletType.CONTA,
+        initialBalance: dto.initialBalance ?? '0',
+        creditLimit: dto.creditLimit,
+        closingDay: dto.closingDay,
+        dueDay: dto.dueDay,
+      },
     });
   }
 
   update(walletId: string, dto: UpdateWalletDto) {
     return this.prisma.wallet.update({
       where: { id: walletId },
-      data: { ...(dto.name !== undefined && { name: dto.name }) },
+      data: {
+        ...(dto.name !== undefined && { name: dto.name }),
+        ...(dto.initialBalance !== undefined && {
+          initialBalance: dto.initialBalance,
+        }),
+        ...(dto.creditLimit !== undefined && { creditLimit: dto.creditLimit }),
+        ...(dto.closingDay !== undefined && { closingDay: dto.closingDay }),
+        ...(dto.dueDay !== undefined && { dueDay: dto.dueDay }),
+      },
     });
   }
 

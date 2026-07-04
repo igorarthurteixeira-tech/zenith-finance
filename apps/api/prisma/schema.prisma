@@ -43,6 +43,11 @@ enum CdbModalidade {
   LIMITE_GARANTIDO
 }
 
+enum WalletType {
+  CONTA
+  CARTAO_CREDITO
+}
+
 model User {
   id            String         @id @default(uuid())
   email         String         @unique
@@ -87,6 +92,11 @@ model Account {
 model Wallet {
   id           String        @id @default(uuid())
   name         String
+  type           WalletType    @default(CONTA)
+  initialBalance Decimal       @default(0) @db.Decimal(14, 2)
+  creditLimit    Decimal?      @db.Decimal(14, 2)
+  closingDay     Int?
+  dueDay         Int?
   accountId    String
   account      Account       @relation(fields: [accountId], references: [id], onDelete: Cascade)
   transactions Transaction[]

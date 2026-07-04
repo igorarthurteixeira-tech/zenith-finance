@@ -25,12 +25,18 @@ export class InvestmentsController {
   }
 
   @Post()
-  create(@Param('accountId') accountId: string, @Body() dto: CreateInvestmentDto) {
+  create(
+    @Param('accountId') accountId: string,
+    @Body() dto: CreateInvestmentDto,
+  ) {
     return this.investmentsService.create(accountId, dto);
   }
 
   @Patch(':investmentId')
-  update(@Param('investmentId') investmentId: string, @Body() dto: UpdateInvestmentDto) {
+  update(
+    @Param('investmentId') investmentId: string,
+    @Body() dto: UpdateInvestmentDto,
+  ) {
     return this.investmentsService.update(investmentId, dto);
   }
 

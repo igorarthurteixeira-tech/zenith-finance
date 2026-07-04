@@ -6,6 +6,7 @@ import { WalletSection } from './WalletSection';
 const NAV_ITEMS = [
   { to: '/', label: 'Dashboard', end: true },
   { to: '/transactions', label: 'Transações' },
+  { to: '/graphs', label: 'Gráficos' },
   { to: '/investments', label: 'Investimentos' },
   { to: '/goals', label: 'Objetivos' },
   { to: '/categories', label: 'Categorias' },

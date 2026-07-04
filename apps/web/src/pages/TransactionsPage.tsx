@@ -7,6 +7,7 @@ import { useCategories } from '../hooks/useCategories';
 import { useWallets } from '../hooks/useWallets';
 import { TransactionForm } from '../components/transactions/TransactionForm';
 import { TransactionList, type ViewMode } from '../components/transactions/TransactionList';
+import { SpendingHistoryChart } from '../components/charts/SpendingHistoryChart';
 
 const VIEW_MODES: { value: ViewMode; label: string }[] = [
   { value: 'monthly', label: 'Mensal' },
@@ -42,6 +43,8 @@ export function TransactionsPage() {
         <h2>Transações</h2>
         <p className="page-subtitle">{activeAccount.name}</p>
       </div>
+
+      <SpendingHistoryChart transactions={filteredTransactions} wallets={wallets} />
 
       <div className="card">
         <TransactionForm categories={categories} wallets={wallets} onSubmit={create} />

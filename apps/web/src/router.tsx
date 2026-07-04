@@ -7,6 +7,7 @@ import { LoginPage } from './pages/LoginPage';
 import { RegisterPage } from './pages/RegisterPage';
 import { DashboardPage } from './pages/DashboardPage';
 import { TransactionsPage } from './pages/TransactionsPage';
+import { GraphsPage } from './pages/GraphsPage';
 import { CategoriesPage } from './pages/CategoriesPage';
 import { TransfersPage } from './pages/TransfersPage';
 import { InvestmentsPage } from './pages/InvestmentsPage';
@@ -34,6 +35,7 @@ export function AppRouter() {
         >
           <Route index element={<DashboardPage />} />
           <Route path="transactions" element={<TransactionsPage />} />
+          <Route path="graphs" element={<GraphsPage />} />
           <Route path="investments" element={<InvestmentsPage />} />
           <Route path="categories" element={<CategoriesPage />} />
           <Route path="transfers" element={<TransfersPage />} />

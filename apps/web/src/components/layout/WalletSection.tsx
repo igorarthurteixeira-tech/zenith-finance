@@ -1,15 +1,22 @@
 import { useState, type FormEvent } from 'react';
 import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
+import { WalletType } from '@zenith/shared';
 import { useAccounts } from '../../context/AccountContext';
 import { useWallets } from '../../hooks/useWallets';
 import { Spinner } from '../ui/Spinner';
+import { Modal } from '../ui/Modal';
 import { useAsyncAction, useAsyncSet } from '../../hooks/useAsyncAction';
 
 export function WalletSection() {
   const { activeAccount } = useAccounts();
   const { wallets, create, remove } = useWallets(activeAccount?.id ?? null);
   const [isCreating, setIsCreating] = useState(false);
-  const [newName, setNewName] = useState('');
+  const [name, setName] = useState('');
+  const [type, setType] = useState<WalletType>(WalletType.CONTA);
+  const [initialBalance, setInitialBalance] = useState('');
+  const [creditLimit, setCreditLimit] = useState('');
+  const [closingDay, setClosingDay] = useState('');
+  const [dueDay, setDueDay] = useState('');
   const { isPending: isCreatingWallet, run: runCreate } = useAsyncAction();
   const { pendingIds: removingIds, run: runRemove } = useAsyncSet();
   const navigate = useNavigate();
@@ -28,13 +35,31 @@ export function WalletSection() {
     }
   }
 
+  function resetForm() {
+    setName('');
+    setType(WalletType.CONTA);
+    setInitialBalance('');
+    setCreditLimit('');
+    setClosingDay('');
+    setDueDay('');
+    setIsCreating(false);
+  }
+
   async function handleCreate(e: FormEvent) {
     e.preventDefault();
-    if (!newName.trim()) return;
+    if (!name.trim()) return;
     await runCreate(async () => {
-      await create({ name: newName });
-      setNewName('');
-      setIsCreating(false);
+      await create({
+        name,
+        type,
+        initialBalance: initialBalance || undefined,
+        ...(type === WalletType.CARTAO_CREDITO && {
+          creditLimit: creditLimit || undefined,
+          closingDay: closingDay ? Number(closingDay) : undefined,
+          dueDay: dueDay ? Number(dueDay) : undefined,
+        }),
+      });
+      resetForm();
     });
   }
 
@@ -53,7 +78,10 @@ export function WalletSection() {
                 title={activeWalletId === w.id ? 'Ver todas as transações' : `Filtrar por ${w.name}`}
               >
                 <span className="sidebar-wallet-dot" />
-                <span className="sidebar-wallet-name">{w.name}</span>
+                <span className="sidebar-wallet-name">
+                  {w.name}
+                  {w.type === WalletType.CARTAO_CREDITO && ' 💳'}
+                </span>
               </button>
               <button
                 type="button"
@@ -70,29 +98,85 @@ export function WalletSection() {
         </ul>
       )}
 
-      {isCreating ? (
-        <form onSubmit={handleCreate} className="sidebar-wallet-form">
-          <input
-            className="input-sm sidebar-input"
-            placeholder="Ex: Carteira, C6 Bank…"
-            value={newName}
-            onChange={(e) => setNewName(e.target.value)}
-            autoFocus
-            disabled={isCreatingWallet}
-          />
-          <div className="sidebar-wallet-form-actions">
-            <button type="submit" className="btn-primary btn-sm" disabled={isCreatingWallet} aria-busy={isCreatingWallet}>
-              {isCreatingWallet ? <><Spinner /> Criando…</> : 'Criar'}
+      <button type="button" className="sidebar-wallet-add" onClick={() => setIsCreating(true)}>
+        + Nova conta
+      </button>
+
+      {isCreating && (
+        <Modal title="Nova conta" onClose={resetForm}>
+          <form onSubmit={handleCreate} className="inline-form">
+            <input
+              placeholder="Ex: Carteira, C6 Bank, Nubank Roxinho…"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              autoFocus
+              disabled={isCreatingWallet}
+            />
+
+            <select
+              value={type}
+              onChange={(e) => setType(e.target.value as WalletType)}
+              disabled={isCreatingWallet}
+            >
+              <option value={WalletType.CONTA}>Conta</option>
+              <option value={WalletType.CARTAO_CREDITO}>Cartão de crédito</option>
+            </select>
+
+            <label className="input-label">
+              Saldo inicial (positivo) ou dívida já existente (negativo)
+              <input
+                placeholder="Ex: 500 ou -150"
+                type="number"
+                step="0.01"
+                value={initialBalance}
+                onChange={(e) => setInitialBalance(e.target.value)}
+                disabled={isCreatingWallet}
+              />
+            </label>
+
+            {type === WalletType.CARTAO_CREDITO && (
+              <>
+                <input
+                  placeholder="Limite do cartão (R$)"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={creditLimit}
+                  onChange={(e) => setCreditLimit(e.target.value)}
+                  disabled={isCreatingWallet}
+                />
+                <label className="input-label">
+                  Dia de fechamento da fatura
+                  <input
+                    placeholder="Ex: 20"
+                    type="number"
+                    min="1"
+                    max="31"
+                    value={closingDay}
+                    onChange={(e) => setClosingDay(e.target.value)}
+                    disabled={isCreatingWallet}
+                  />
+                </label>
+                <label className="input-label">
+                  Dia de vencimento da fatura
+                  <input
+                    placeholder="Ex: 27"
+                    type="number"
+                    min="1"
+                    max="31"
+                    value={dueDay}
+                    onChange={(e) => setDueDay(e.target.value)}
+                    disabled={isCreatingWallet}
+                  />
+                </label>
+              </>
+            )}
+
+            <button type="submit" className="btn-primary" disabled={isCreatingWallet} aria-busy={isCreatingWallet}>
+              {isCreatingWallet ? <><Spinner /> Criando…</> : 'Criar conta'}
             </button>
-            <button type="button" className="btn-ghost btn-sm" onClick={() => setIsCreating(false)} disabled={isCreatingWallet}>
-              Cancelar
-            </button>
-          </div>
-        </form>
-      ) : (
-        <button type="button" className="sidebar-wallet-add" onClick={() => setIsCreating(true)}>
-          + Nova conta
-        </button>
+          </form>
+        </Modal>
       )}
     </div>
   );
