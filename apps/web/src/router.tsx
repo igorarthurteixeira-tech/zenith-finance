@@ -9,6 +9,7 @@ import { DashboardPage } from './pages/DashboardPage';
 import { TransactionsPage } from './pages/TransactionsPage';
 import { CategoriesPage } from './pages/CategoriesPage';
 import { TransfersPage } from './pages/TransfersPage';
+import { InvestmentsPage } from './pages/InvestmentsPage';
 
 function ProtectedRoute({ children }: { children: ReactNode }) {
   const { user, isLoading } = useAuth();
@@ -32,6 +33,7 @@ export function AppRouter() {
         >
           <Route index element={<DashboardPage />} />
           <Route path="transactions" element={<TransactionsPage />} />
+          <Route path="investments" element={<InvestmentsPage />} />
           <Route path="categories" element={<CategoriesPage />} />
           <Route path="transfers" element={<TransfersPage />} />
         </Route>

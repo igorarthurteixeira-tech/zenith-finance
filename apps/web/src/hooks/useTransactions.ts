@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { CreateTransactionInput } from '@zenith/shared';
+import type { CreateTransactionInput, UpdateTransactionInput } from '@zenith/shared';
 import { transactionsApi } from '../api/transactions';
 
 export function useTransactions(accountId: string | null) {
@@ -18,6 +18,12 @@ export function useTransactions(accountId: string | null) {
     onSuccess: () => queryClient.invalidateQueries({ queryKey }),
   });
 
+  const updateMutation = useMutation({
+    mutationFn: ({ transactionId, input }: { transactionId: string; input: UpdateTransactionInput }) =>
+      transactionsApi.update(accountId!, transactionId, input),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey }),
+  });
+
   const removeMutation = useMutation({
     mutationFn: (transactionId: string) =>
       transactionsApi.remove(accountId!, transactionId),
@@ -28,6 +34,7 @@ export function useTransactions(accountId: string | null) {
     transactions: query.data ?? [],
     isLoading: query.isLoading,
     create: createMutation.mutateAsync,
+    update: updateMutation.mutateAsync,
     remove: removeMutation.mutateAsync,
   };
 }

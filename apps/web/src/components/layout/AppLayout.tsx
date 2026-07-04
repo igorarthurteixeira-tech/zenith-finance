@@ -5,6 +5,7 @@ import { AccountSwitcher } from './AccountSwitcher';
 const NAV_ITEMS = [
   { to: '/', label: 'Dashboard', end: true },
   { to: '/transactions', label: 'Transações' },
+  { to: '/investments', label: 'Investimentos' },
   { to: '/categories', label: 'Categorias' },
   { to: '/transfers', label: 'Transferências' },
 ];

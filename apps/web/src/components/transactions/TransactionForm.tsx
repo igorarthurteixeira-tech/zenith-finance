@@ -1,23 +1,43 @@
-import { useState, type FormEvent } from 'react';
-import { TransactionType, type CategoryDto } from '@zenith/shared';
+import { useState, useEffect, type FormEvent } from 'react';
+import { TransactionType, type CategoryDto, type WalletDto, type TransactionDto } from '@zenith/shared';
 
 interface TransactionFormProps {
   categories: CategoryDto[];
+  wallets: WalletDto[];
   onSubmit: (input: {
     description: string;
     amount: string;
     type: TransactionType;
     date: string;
     categoryId?: string;
+    walletId?: string;
   }) => Promise<unknown>;
+  onCancel?: () => void;
+  initialValues?: TransactionDto;
 }
 
-export function TransactionForm({ categories, onSubmit }: TransactionFormProps) {
-  const [description, setDescription] = useState('');
-  const [amount, setAmount] = useState('');
-  const [type, setType] = useState<TransactionType>(TransactionType.EXPENSE);
-  const [date, setDate] = useState(() => new Date().toISOString().slice(0, 10));
-  const [categoryId, setCategoryId] = useState('');
+export function TransactionForm({ categories, wallets, onSubmit, onCancel, initialValues }: TransactionFormProps) {
+  const isEditing = !!initialValues;
+
+  const [description, setDescription] = useState(initialValues?.description ?? '');
+  const [amount, setAmount] = useState(initialValues?.amount ?? '');
+  const [type, setType] = useState<TransactionType>(initialValues?.type ?? TransactionType.EXPENSE);
+  const [date, setDate] = useState(() =>
+    initialValues ? initialValues.date.slice(0, 10) : new Date().toISOString().slice(0, 10),
+  );
+  const [categoryId, setCategoryId] = useState(initialValues?.categoryId ?? '');
+  const [walletId, setWalletId] = useState(initialValues?.walletId ?? '');
+
+  useEffect(() => {
+    if (initialValues) {
+      setDescription(initialValues.description);
+      setAmount(initialValues.amount);
+      setType(initialValues.type);
+      setDate(initialValues.date.slice(0, 10));
+      setCategoryId(initialValues.categoryId ?? '');
+      setWalletId(initialValues.walletId ?? '');
+    }
+  }, [initialValues]);
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
@@ -28,9 +48,12 @@ export function TransactionForm({ categories, onSubmit }: TransactionFormProps) 
       type,
       date: new Date(date).toISOString(),
       categoryId: categoryId || undefined,
+      walletId: walletId || undefined,
     });
-    setDescription('');
-    setAmount('');
+    if (!isEditing) {
+      setDescription('');
+      setAmount('');
+    }
   }
 
   const filteredCategories = categories.filter((c) => c.type === type);
@@ -54,6 +77,16 @@ export function TransactionForm({ categories, onSubmit }: TransactionFormProps) 
         <option value={TransactionType.EXPENSE}>Despesa</option>
         <option value={TransactionType.INCOME}>Receita</option>
       </select>
+      {wallets.length > 0 && (
+        <select value={walletId} onChange={(e) => setWalletId(e.target.value)}>
+          <option value="">Sem conta</option>
+          {wallets.map((w) => (
+            <option key={w.id} value={w.id}>
+              {w.name}
+            </option>
+          ))}
+        </select>
+      )}
       <select value={categoryId} onChange={(e) => setCategoryId(e.target.value)}>
         <option value="">Sem categoria</option>
         {filteredCategories.map((category) => (
@@ -63,7 +96,12 @@ export function TransactionForm({ categories, onSubmit }: TransactionFormProps) 
         ))}
       </select>
       <input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
-      <button type="submit">Adicionar</button>
+      <button type="submit">{isEditing ? 'Salvar' : 'Adicionar'}</button>
+      {onCancel && (
+        <button type="button" className="btn-ghost btn-sm" onClick={onCancel}>
+          Cancelar
+        </button>
+      )}
     </form>
   );
 }

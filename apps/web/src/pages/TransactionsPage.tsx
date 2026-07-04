@@ -1,16 +1,31 @@
+import { useState } from 'react';
 import { useAccounts } from '../context/AccountContext';
 import { useTransactions } from '../hooks/useTransactions';
 import { useCategories } from '../hooks/useCategories';
+import { useWallets } from '../hooks/useWallets';
 import { TransactionForm } from '../components/transactions/TransactionForm';
-import { TransactionList } from '../components/transactions/TransactionList';
+import { TransactionList, type ViewMode } from '../components/transactions/TransactionList';
+
+const VIEW_MODES: { value: ViewMode; label: string }[] = [
+  { value: 'monthly', label: 'Mensal' },
+  { value: 'quarterly', label: 'Trimestral' },
+  { value: 'semester', label: 'Semestral' },
+  { value: 'annual', label: 'Anual' },
+];
 
 export function TransactionsPage() {
   const { activeAccount } = useAccounts();
   const accountId = activeAccount?.id ?? null;
-  const { transactions, isLoading, create, remove } = useTransactions(accountId);
+  const { transactions, isLoading, create, update, remove } = useTransactions(accountId);
   const { categories } = useCategories(accountId);
+  const { wallets } = useWallets(accountId);
+  const [viewMode, setViewMode] = useState<ViewMode>('monthly');
 
   if (!activeAccount) return <p>Nenhuma conta selecionada.</p>;
+
+  async function handleUpdate(transactionId: string, input: Parameters<typeof update>[0]['input']) {
+    await update({ transactionId, input });
+  }
 
   return (
     <div>
@@ -20,14 +35,34 @@ export function TransactionsPage() {
       </div>
 
       <div className="card">
-        <TransactionForm categories={categories} onSubmit={create} />
+        <TransactionForm categories={categories} wallets={wallets} onSubmit={create} />
+      </div>
+
+      <div className="view-mode-bar">
+        {VIEW_MODES.map((mode) => (
+          <button
+            key={mode.value}
+            type="button"
+            className={`view-mode-btn${viewMode === mode.value ? ' active' : ''}`}
+            onClick={() => setViewMode(mode.value)}
+          >
+            {mode.label}
+          </button>
+        ))}
       </div>
 
       <div className="card">
         {isLoading ? (
           <p className="muted">Carregando...</p>
         ) : (
-          <TransactionList transactions={transactions} onRemove={remove} />
+          <TransactionList
+            transactions={transactions}
+            categories={categories}
+            wallets={wallets}
+            onRemove={remove}
+            onUpdate={handleUpdate}
+            viewMode={viewMode}
+          />
         )}
       </div>
     </div>

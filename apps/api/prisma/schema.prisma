@@ -17,6 +17,27 @@ enum TransactionType {
   EXPENSE
 }
 
+enum InvestmentType {
+  CDB
+  LCI
+  LCA
+  TESOURO_DIRETO
+  ACOES
+  FII
+  CRIPTO
+  OUTRO
+}
+
+enum InvestmentLiquidity {
+  D0
+  D1
+  D2
+  D30
+  D60
+  D90
+  NO_VENCIMENTO
+}
+
 model User {
   id            String         @id @default(uuid())
   email         String         @unique
@@ -48,12 +69,26 @@ model Account {
   owner         User          @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   categories    Category[]
   transactions  Transaction[]
+  wallets       Wallet[]
+  investments   Investment[]
   transfersFrom Transfer[]    @relation("fromAccount")
   transfersTo   Transfer[]    @relation("toAccount")
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
 
   @@index([ownerId])
+}
+
+model Wallet {
+  id           String        @id @default(uuid())
+  name         String
+  accountId    String
+  account      Account       @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  transactions Transaction[]
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  @@index([accountId])
 }
 
 model Category {
@@ -78,6 +113,8 @@ model Transaction {
   account     Account         @relation(fields: [accountId], references: [id], onDelete: Cascade)
   categoryId  String?
   category    Category?       @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  walletId    String?
+  wallet      Wallet?         @relation(fields: [walletId], references: [id], onDelete: SetNull)
   createdAt   DateTime        @default(now())
   updatedAt   DateTime        @updatedAt
 
@@ -85,6 +122,23 @@ model Transaction {
   transferIn  Transfer? @relation("destinationTransaction")
 
   @@index([accountId, date])
+}
+
+model Investment {
+  id           String              @id @default(uuid())
+  name         String
+  type         InvestmentType
+  liquidity    InvestmentLiquidity
+  principal    Decimal             @db.Decimal(14, 2)
+  rate         Decimal             @db.Decimal(8, 4)
+  startDate    DateTime
+  maturityDate DateTime?
+  accountId    String
+  account      Account             @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  createdAt    DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt
+
+  @@index([accountId])
 }
 
 model Transfer {

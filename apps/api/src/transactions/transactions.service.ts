@@ -23,6 +23,7 @@ export class TransactionsService {
         date: new Date(dto.date),
         accountId,
         categoryId: dto.categoryId,
+        walletId: dto.walletId,
       },
     });
   }
@@ -36,6 +37,7 @@ export class TransactionsService {
         ...(dto.type !== undefined && { type: dto.type }),
         ...(dto.date !== undefined && { date: new Date(dto.date) }),
         ...(dto.categoryId !== undefined && { categoryId: dto.categoryId }),
+        ...(dto.walletId !== undefined && { walletId: dto.walletId }),
       },
     });
   }
