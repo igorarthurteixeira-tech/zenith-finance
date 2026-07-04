@@ -35,9 +35,9 @@ export function TransactionForm({ categories, wallets, onSubmit, onCancel, initi
       setType(initialValues.type);
       setDate(initialValues.date.slice(0, 10));
       setCategoryId(initialValues.categoryId ?? '');
-      setWalletId(initialValues.walletId ?? '');
+      setWalletId(initialValues.walletId ?? wallets[0]?.id ?? '');
     }
-  }, [initialValues]);
+  }, [initialValues, wallets]);
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
