@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react';
 import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
-import { WalletType } from '@zenith/shared';
+import { WalletType, type WalletDto } from '@zenith/shared';
 import { useAccounts } from '../../context/AccountContext';
 import { useWallets } from '../../hooks/useWallets';
 import { Spinner } from '../ui/Spinner';
@@ -10,14 +10,8 @@ import { useAsyncAction, useAsyncSet } from '../../hooks/useAsyncAction';
 export function WalletSection() {
   const { activeAccount } = useAccounts();
   const { wallets, create, remove } = useWallets(activeAccount?.id ?? null);
-  const [isCreating, setIsCreating] = useState(false);
-  const [name, setName] = useState('');
-  const [type, setType] = useState<WalletType>(WalletType.CONTA);
-  const [initialBalance, setInitialBalance] = useState('');
-  const [creditLimit, setCreditLimit] = useState('');
-  const [closingDay, setClosingDay] = useState('');
-  const [dueDay, setDueDay] = useState('');
-  const { isPending: isCreatingWallet, run: runCreate } = useAsyncAction();
+  const [isCreatingAccount, setIsCreatingAccount] = useState(false);
+  const [cardParent, setCardParent] = useState<WalletDto | null>(null);
   const { pendingIds: removingIds, run: runRemove } = useAsyncSet();
   const navigate = useNavigate();
   const location = useLocation();
@@ -35,149 +29,246 @@ export function WalletSection() {
     }
   }
 
-  function resetForm() {
-    setName('');
-    setType(WalletType.CONTA);
-    setInitialBalance('');
-    setCreditLimit('');
-    setClosingDay('');
-    setDueDay('');
-    setIsCreating(false);
-  }
-
-  async function handleCreate(e: FormEvent) {
-    e.preventDefault();
-    if (!name.trim()) return;
-    await runCreate(async () => {
-      await create({
-        name,
-        type,
-        initialBalance: initialBalance || undefined,
-        ...(type === WalletType.CARTAO_CREDITO && {
-          creditLimit: creditLimit || undefined,
-          closingDay: closingDay ? Number(closingDay) : undefined,
-          dueDay: dueDay ? Number(dueDay) : undefined,
-        }),
-      });
-      resetForm();
-    });
+  const topLevelWallets = wallets.filter((w) => !w.parentWalletId);
+  const cardsByParent = new Map<string, WalletDto[]>();
+  for (const w of wallets) {
+    if (w.parentWalletId) {
+      cardsByParent.set(w.parentWalletId, [...(cardsByParent.get(w.parentWalletId) ?? []), w]);
+    }
   }
 
   return (
     <div className="sidebar-wallet-section">
       <p className="sidebar-section-title">Contas</p>
 
-      {wallets.length > 0 && (
+      {topLevelWallets.length > 0 && (
         <ul className="sidebar-wallet-list">
-          {wallets.map((w) => (
-            <li key={w.id} className={`sidebar-wallet-item${activeWalletId === w.id ? ' active' : ''}`}>
+          {topLevelWallets.map((w) => (
+            <li key={w.id} className="sidebar-wallet-group">
+              <div className={`sidebar-wallet-item${activeWalletId === w.id ? ' active' : ''}`}>
+                <button
+                  type="button"
+                  className="sidebar-wallet-name-btn"
+                  onClick={() => handleWalletClick(w.id)}
+                  title={activeWalletId === w.id ? 'Ver todas as transações' : `Filtrar por ${w.name}`}
+                >
+                  <span className="sidebar-wallet-dot" />
+                  <span className="sidebar-wallet-name">{w.name}</span>
+                </button>
+                <button
+                  type="button"
+                  className="btn-icon sidebar-wallet-remove"
+                  onClick={() => runRemove(w.id, () => remove(w.id))}
+                  disabled={removingIds.has(w.id)}
+                  aria-busy={removingIds.has(w.id)}
+                  aria-label="Remover conta"
+                >
+                  {removingIds.has(w.id) ? <Spinner /> : '×'}
+                </button>
+              </div>
+
+              {(cardsByParent.get(w.id) ?? []).map((card) => (
+                <div
+                  key={card.id}
+                  className={`sidebar-wallet-item sidebar-wallet-card${activeWalletId === card.id ? ' active' : ''}`}
+                >
+                  <button
+                    type="button"
+                    className="sidebar-wallet-name-btn"
+                    onClick={() => handleWalletClick(card.id)}
+                    title={activeWalletId === card.id ? 'Ver todas as transações' : `Filtrar por ${card.name}`}
+                  >
+                    <span className="sidebar-wallet-dot" />
+                    <span className="sidebar-wallet-name">💳 {card.name}</span>
+                  </button>
+                  <button
+                    type="button"
+                    className="btn-icon sidebar-wallet-remove"
+                    onClick={() => runRemove(card.id, () => remove(card.id))}
+                    disabled={removingIds.has(card.id)}
+                    aria-busy={removingIds.has(card.id)}
+                    aria-label="Remover cartão"
+                  >
+                    {removingIds.has(card.id) ? <Spinner /> : '×'}
+                  </button>
+                </div>
+              ))}
+
               <button
                 type="button"
-                className="sidebar-wallet-name-btn"
-                onClick={() => handleWalletClick(w.id)}
-                title={activeWalletId === w.id ? 'Ver todas as transações' : `Filtrar por ${w.name}`}
+                className="sidebar-wallet-add-card"
+                onClick={() => setCardParent(w)}
               >
-                <span className="sidebar-wallet-dot" />
-                <span className="sidebar-wallet-name">
-                  {w.name}
-                  {w.type === WalletType.CARTAO_CREDITO && ' 💳'}
-                </span>
-              </button>
-              <button
-                type="button"
-                className="btn-icon sidebar-wallet-remove"
-                onClick={() => runRemove(w.id, () => remove(w.id))}
-                disabled={removingIds.has(w.id)}
-                aria-busy={removingIds.has(w.id)}
-                aria-label="Remover conta"
-              >
-                {removingIds.has(w.id) ? <Spinner /> : '×'}
+                + Cartão em {w.name}
               </button>
             </li>
           ))}
         </ul>
       )}
 
-      <button type="button" className="sidebar-wallet-add" onClick={() => setIsCreating(true)}>
-        + Nova conta
-      </button>
+      {isCreatingAccount ? (
+        <NewAccountForm
+          isCreating={isCreatingAccount}
+          onCreate={create}
+          onClose={() => setIsCreatingAccount(false)}
+        />
+      ) : (
+        <button type="button" className="sidebar-wallet-add" onClick={() => setIsCreatingAccount(true)}>
+          + Nova conta
+        </button>
+      )}
 
-      {isCreating && (
-        <Modal title="Nova conta" onClose={resetForm}>
-          <form onSubmit={handleCreate} className="inline-form">
-            <input
-              placeholder="Ex: Carteira, C6 Bank, Nubank Roxinho…"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              autoFocus
-              disabled={isCreatingWallet}
-            />
-
-            <select
-              value={type}
-              onChange={(e) => setType(e.target.value as WalletType)}
-              disabled={isCreatingWallet}
-            >
-              <option value={WalletType.CONTA}>Conta</option>
-              <option value={WalletType.CARTAO_CREDITO}>Cartão de crédito</option>
-            </select>
-
-            <label className="input-label">
-              Saldo inicial (positivo) ou dívida já existente (negativo)
-              <input
-                placeholder="Ex: 500 ou -150"
-                type="number"
-                step="0.01"
-                value={initialBalance}
-                onChange={(e) => setInitialBalance(e.target.value)}
-                disabled={isCreatingWallet}
-              />
-            </label>
-
-            {type === WalletType.CARTAO_CREDITO && (
-              <>
-                <input
-                  placeholder="Limite do cartão (R$)"
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  value={creditLimit}
-                  onChange={(e) => setCreditLimit(e.target.value)}
-                  disabled={isCreatingWallet}
-                />
-                <label className="input-label">
-                  Dia de fechamento da fatura
-                  <input
-                    placeholder="Ex: 20"
-                    type="number"
-                    min="1"
-                    max="31"
-                    value={closingDay}
-                    onChange={(e) => setClosingDay(e.target.value)}
-                    disabled={isCreatingWallet}
-                  />
-                </label>
-                <label className="input-label">
-                  Dia de vencimento da fatura
-                  <input
-                    placeholder="Ex: 27"
-                    type="number"
-                    min="1"
-                    max="31"
-                    value={dueDay}
-                    onChange={(e) => setDueDay(e.target.value)}
-                    disabled={isCreatingWallet}
-                  />
-                </label>
-              </>
-            )}
-
-            <button type="submit" className="btn-primary" disabled={isCreatingWallet} aria-busy={isCreatingWallet}>
-              {isCreatingWallet ? <><Spinner /> Criando…</> : 'Criar conta'}
-            </button>
-          </form>
-        </Modal>
+      {cardParent && (
+        <NewCardModal
+          parent={cardParent}
+          onCreate={create}
+          onClose={() => setCardParent(null)}
+        />
       )}
     </div>
+  );
+}
+
+interface NewAccountFormProps {
+  isCreating: boolean;
+  onCreate: ReturnType<typeof useWallets>['create'];
+  onClose: () => void;
+}
+
+function NewAccountForm({ onCreate, onClose }: NewAccountFormProps) {
+  const [name, setName] = useState('');
+  const [initialBalance, setInitialBalance] = useState('');
+  const { isPending, run } = useAsyncAction();
+
+  async function handleSubmit(e: FormEvent) {
+    e.preventDefault();
+    if (!name.trim()) return;
+    await run(async () => {
+      await onCreate({ name, initialBalance: initialBalance || undefined });
+      onClose();
+    });
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="sidebar-wallet-form">
+      <input
+        className="input-sm sidebar-input"
+        placeholder="Ex: Carteira, C6 Bank…"
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+        autoFocus
+        disabled={isPending}
+      />
+      <input
+        className="input-sm sidebar-input"
+        placeholder="Saldo inicial (opcional)"
+        type="number"
+        step="0.01"
+        value={initialBalance}
+        onChange={(e) => setInitialBalance(e.target.value)}
+        disabled={isPending}
+      />
+      <div className="sidebar-wallet-form-actions">
+        <button type="submit" className="btn-primary btn-sm" disabled={isPending} aria-busy={isPending}>
+          {isPending ? <><Spinner /> Criando…</> : 'Criar'}
+        </button>
+        <button type="button" className="btn-ghost btn-sm" onClick={onClose} disabled={isPending}>
+          Cancelar
+        </button>
+      </div>
+    </form>
+  );
+}
+
+interface NewCardModalProps {
+  parent: WalletDto;
+  onCreate: ReturnType<typeof useWallets>['create'];
+  onClose: () => void;
+}
+
+function NewCardModal({ parent, onCreate, onClose }: NewCardModalProps) {
+  const [name, setName] = useState('');
+  const [initialBalance, setInitialBalance] = useState('');
+  const [creditLimit, setCreditLimit] = useState('');
+  const [closingDay, setClosingDay] = useState('');
+  const [dueDay, setDueDay] = useState('');
+  const { isPending, run } = useAsyncAction();
+
+  async function handleSubmit(e: FormEvent) {
+    e.preventDefault();
+    if (!name.trim()) return;
+    await run(async () => {
+      await onCreate({
+        name,
+        type: WalletType.CARTAO_CREDITO,
+        parentWalletId: parent.id,
+        initialBalance: initialBalance || undefined,
+        creditLimit: creditLimit || undefined,
+        closingDay: closingDay ? Number(closingDay) : undefined,
+        dueDay: dueDay ? Number(dueDay) : undefined,
+      });
+      onClose();
+    });
+  }
+
+  return (
+    <Modal title={`Novo cartão em ${parent.name}`} onClose={onClose}>
+      <form onSubmit={handleSubmit} className="inline-form">
+        <input
+          placeholder="Ex: Cartão físico, Virtual 1…"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          autoFocus
+          disabled={isPending}
+        />
+        <label className="input-label">
+          Fatura em aberto (dívida já existente, se houver)
+          <input
+            placeholder="Ex: -350"
+            type="number"
+            step="0.01"
+            value={initialBalance}
+            onChange={(e) => setInitialBalance(e.target.value)}
+            disabled={isPending}
+          />
+        </label>
+        <input
+          placeholder="Limite do cartão (R$)"
+          type="number"
+          step="0.01"
+          min="0"
+          value={creditLimit}
+          onChange={(e) => setCreditLimit(e.target.value)}
+          disabled={isPending}
+        />
+        <label className="input-label">
+          Dia de fechamento da fatura
+          <input
+            placeholder="Ex: 20"
+            type="number"
+            min="1"
+            max="31"
+            value={closingDay}
+            onChange={(e) => setClosingDay(e.target.value)}
+            disabled={isPending}
+          />
+        </label>
+        <label className="input-label">
+          Dia de vencimento da fatura
+          <input
+            placeholder="Ex: 27"
+            type="number"
+            min="1"
+            max="31"
+            value={dueDay}
+            onChange={(e) => setDueDay(e.target.value)}
+            disabled={isPending}
+          />
+        </label>
+        <button type="submit" className="btn-primary" disabled={isPending} aria-busy={isPending}>
+          {isPending ? <><Spinner /> Criando…</> : 'Criar cartão'}
+        </button>
+      </form>
+    </Modal>
   );
 }

@@ -41,6 +41,7 @@ export interface WalletDto {
   creditLimit: string | null;
   closingDay: number | null;
   dueDay: number | null;
+  parentWalletId: string | null;
   accountId: string;
 }
 
@@ -51,6 +52,7 @@ export interface CreateWalletInput {
   creditLimit?: string;
   closingDay?: number;
   dueDay?: number;
+  parentWalletId?: string;
 }
 
 export interface UpdateWalletInput {

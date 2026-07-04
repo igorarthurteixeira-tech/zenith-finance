@@ -25,6 +25,8 @@ export class WalletsService {
         creditLimit: dto.creditLimit,
         closingDay: dto.closingDay,
         dueDay: dto.dueDay,
+        parentWalletId:
+          dto.type === WalletType.CARTAO_CREDITO ? dto.parentWalletId : null,
       },
     });
   }

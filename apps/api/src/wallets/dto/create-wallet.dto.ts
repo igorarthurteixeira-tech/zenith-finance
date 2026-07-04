@@ -4,9 +4,11 @@ import {
   IsNumberString,
   IsOptional,
   IsString,
+  IsUUID,
   Max,
   Min,
   MinLength,
+  ValidateIf,
 } from 'class-validator';
 import { WalletType } from '@zenith/shared';
 
@@ -38,4 +40,9 @@ export class CreateWalletDto {
   @Min(1)
   @Max(31)
   dueDay?: number;
+
+  // Todo cartão de crédito precisa estar vinculado a uma conta existente.
+  @ValidateIf((dto: CreateWalletDto) => dto.type === WalletType.CARTAO_CREDITO)
+  @IsUUID()
+  parentWalletId?: string;
 }
