@@ -71,7 +71,7 @@ export function TransactionForm({
 
   const [countsInTotal, setCountsInTotal] = useState(initialValues?.countsInTotal ?? true);
   const [groupScope, setGroupScope] = useState<'single' | 'before' | 'up_to' | 'all'>('single');
-  const [invoicePeriod, setInvoicePeriod] = useState('');
+  const [invoicePeriod, setInvoicePeriod] = useState(initialValues?.invoicePeriod ?? '');
   const [isInstallmentPurchase, setIsInstallmentPurchase] = useState(false);
   const [amountMode, setAmountMode] = useState<InstallmentAmountMode>(InstallmentAmountMode.TOTAL);
   const [totalInstallments, setTotalInstallments] = useState('2');
@@ -90,6 +90,7 @@ export function TransactionForm({
       setDate(toDatetimeLocalValue(new Date(initialValues.date)));
       setCategoryId(initialValues.categoryId ?? '');
       setWalletId(initialValues.walletId ?? wallets[0]?.id ?? '');
+      setInvoicePeriod(initialValues.invoicePeriod ?? '');
     }
   }, [initialValues, wallets]);
 
@@ -166,7 +167,7 @@ export function TransactionForm({
         date: new Date(date).toISOString(),
         categoryId: categoryId || undefined,
         walletId,
-        invoicePeriod: isCardWallet ? invoicePeriod : undefined,
+        invoicePeriod: isCardWallet && invoicePeriod ? invoicePeriod : undefined,
         ...(isEditing && { countsInTotal }),
       });
       if (!isEditing) {
