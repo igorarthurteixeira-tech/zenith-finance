@@ -1,4 +1,9 @@
-import type { CreateTransactionInput, TransactionDto, UpdateTransactionInput } from '@zenith/shared';
+import type {
+  CreateInstallmentPurchaseInput,
+  CreateTransactionInput,
+  TransactionDto,
+  UpdateTransactionInput,
+} from '@zenith/shared';
 import { apiClient } from './client';
 
 export const transactionsApi = {
@@ -6,6 +11,11 @@ export const transactionsApi = {
     apiClient.get<TransactionDto[]>(`/accounts/${accountId}/transactions`),
   create: (accountId: string, input: CreateTransactionInput) =>
     apiClient.post<TransactionDto>(`/accounts/${accountId}/transactions`, input),
+  createInstallmentPurchase: (accountId: string, input: CreateInstallmentPurchaseInput) =>
+    apiClient.post<TransactionDto[]>(
+      `/accounts/${accountId}/transactions/installments`,
+      input,
+    ),
   update: (accountId: string, transactionId: string, input: UpdateTransactionInput) =>
     apiClient.patch<TransactionDto>(
       `/accounts/${accountId}/transactions/${transactionId}`,

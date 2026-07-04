@@ -1,4 +1,4 @@
-import { AccountType, TransactionType, InvestmentType, InvestmentLiquidity, CdbModalidade, WalletType } from './enums';
+import { AccountType, TransactionType, InvestmentType, InvestmentLiquidity, CdbModalidade, WalletType, InstallmentAmountMode } from './enums';
 
 export interface RegisterInput {
   name: string;
@@ -81,6 +81,7 @@ export interface TransactionDto {
   amount: string;
   type: TransactionType;
   date: string;
+  invoicePeriod: string | null;
   accountId: string;
   categoryId: string | null;
   walletId: string | null;
@@ -93,6 +94,7 @@ export interface CreateTransactionInput {
   date: string;
   categoryId?: string;
   walletId: string;
+  invoicePeriod?: string;
 }
 
 export interface UpdateTransactionInput {
@@ -102,6 +104,21 @@ export interface UpdateTransactionInput {
   date?: string;
   categoryId?: string;
   walletId?: string;
+  invoicePeriod?: string;
+}
+
+export interface CreateInstallmentPurchaseInput {
+  description: string;
+  walletId: string;
+  categoryId?: string;
+  type: TransactionType;
+  date: string;
+  amountMode: InstallmentAmountMode;
+  amount: string;
+  totalInstallments: number;
+  startInstallment: number;
+  startInvoicePeriod: string;
+  includePastInstallments: boolean;
 }
 
 export interface TransferDto {

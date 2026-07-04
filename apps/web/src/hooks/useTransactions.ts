@@ -1,5 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { CreateTransactionInput, UpdateTransactionInput } from '@zenith/shared';
+import type {
+  CreateInstallmentPurchaseInput,
+  CreateTransactionInput,
+  UpdateTransactionInput,
+} from '@zenith/shared';
 import { transactionsApi } from '../api/transactions';
 
 export function useTransactions(accountId: string | null) {
@@ -30,11 +34,18 @@ export function useTransactions(accountId: string | null) {
     onSuccess: () => queryClient.invalidateQueries({ queryKey }),
   });
 
+  const createInstallmentPurchaseMutation = useMutation({
+    mutationFn: (input: CreateInstallmentPurchaseInput) =>
+      transactionsApi.createInstallmentPurchase(accountId!, input),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey }),
+  });
+
   return {
     transactions: query.data ?? [],
     isLoading: query.isLoading,
     create: createMutation.mutateAsync,
     update: updateMutation.mutateAsync,
     remove: removeMutation.mutateAsync,
+    createInstallmentPurchase: createInstallmentPurchaseMutation.mutateAsync,
   };
 }

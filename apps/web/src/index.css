@@ -1669,3 +1669,44 @@ button[aria-busy='true'] {
   border-radius: 50%;
   animation: spin 0.7s linear infinite;
 }
+
+/* ---------- Installment purchase ---------- */
+
+.installment-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+  cursor: pointer;
+}
+
+.installment-toggle input {
+  width: auto;
+}
+
+.installment-panel {
+  width: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: flex-end;
+  padding: 0.85rem;
+  border-radius: var(--radius-sm);
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+}
+
+.invoice-period-nav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+
+.invoice-period-label {
+  font-weight: 600;
+  min-width: 180px;
+  text-align: center;
+}

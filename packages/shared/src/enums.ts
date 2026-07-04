@@ -38,3 +38,8 @@ export enum WalletType {
   CONTA = 'CONTA',
   CARTAO_CREDITO = 'CARTAO_CREDITO',
 }
+
+export enum InstallmentAmountMode {
+  PER_INSTALLMENT = 'PER_INSTALLMENT',
+  TOTAL = 'TOTAL',
+}

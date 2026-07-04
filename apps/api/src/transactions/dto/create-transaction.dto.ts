@@ -5,6 +5,7 @@ import {
   IsOptional,
   IsString,
   IsUUID,
+  Matches,
   MinLength,
 } from 'class-validator';
 import { TransactionType } from '@zenith/shared';
@@ -29,4 +30,10 @@ export class CreateTransactionDto {
 
   @IsUUID()
   walletId: string;
+
+  @IsOptional()
+  @Matches(/^\d{4}-\d{2}$/, {
+    message: 'invoicePeriod deve estar no formato YYYY-MM',
+  })
+  invoicePeriod?: string;
 }

@@ -2,6 +2,8 @@ import { useState } from 'react';
 import {
   TransactionType,
   WalletType,
+  currentOpenInvoicePeriod,
+  periodOfDate,
   type WalletDto,
   type TransactionDto,
   type CreateWalletInput,
@@ -47,15 +49,22 @@ export function CreditCardSection({
       ) : (
         <div className="credit-card-grid">
           {cards.map((card) => {
-            const cardTransactions = transactions.filter((t) => t.walletId === card.id);
-            const income = cardTransactions
+            const openPeriod = currentOpenInvoicePeriod(card.closingDay);
+            const currentPeriodTransactions = transactions.filter((t) => {
+              if (t.walletId !== card.id) return false;
+              const effectivePeriod = t.invoicePeriod ?? periodOfDate(new Date(t.date));
+              return effectivePeriod === openPeriod;
+            });
+            const income = currentPeriodTransactions
               .filter((t) => t.type === TransactionType.INCOME)
               .reduce((sum, t) => sum + Number(t.amount), 0);
-            const expense = cardTransactions
+            const expense = currentPeriodTransactions
               .filter((t) => t.type === TransactionType.EXPENSE)
               .reduce((sum, t) => sum + Number(t.amount), 0);
-            const cardBalance = Number(card.initialBalance) + income - expense;
-            const debt = Math.max(0, -cardBalance);
+            // A fatura atual soma a dívida que já existia antes de usar o app
+            // (initialBalance) com o líquido lançado no ciclo aberto agora.
+            const preExistingDebt = Math.max(0, -Number(card.initialBalance));
+            const debt = Math.max(0, preExistingDebt + expense - income);
             const limit = card.creditLimit ? Number(card.creditLimit) : null;
 
             return (

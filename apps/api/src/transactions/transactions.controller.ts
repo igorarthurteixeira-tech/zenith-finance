@@ -13,6 +13,7 @@ import { AccountMembershipGuard } from '../accounts/guards/account-membership.gu
 import { TransactionsService } from './transactions.service';
 import { CreateTransactionDto } from './dto/create-transaction.dto';
 import { UpdateTransactionDto } from './dto/update-transaction.dto';
+import { CreateInstallmentPurchaseDto } from './dto/create-installment-purchase.dto';
 
 @UseGuards(JwtAuthGuard, AccountMembershipGuard)
 @Controller('accounts/:accountId/transactions')
@@ -30,6 +31,14 @@ export class TransactionsController {
     @Body() dto: CreateTransactionDto,
   ) {
     return this.transactionsService.create(accountId, dto);
+  }
+
+  @Post('installments')
+  createInstallmentPurchase(
+    @Param('accountId') accountId: string,
+    @Body() dto: CreateInstallmentPurchaseDto,
+  ) {
+    return this.transactionsService.createInstallmentPurchase(accountId, dto);
   }
 
   @Patch(':transactionId')

@@ -1,6 +1,13 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { WalletType, type UpdateTransactionInput } from '@zenith/shared';
+import {
+  WalletType,
+  currentOpenInvoicePeriod,
+  addMonthsToPeriod,
+  invoicePeriodLabel,
+  periodOfDate,
+  type UpdateTransactionInput,
+} from '@zenith/shared';
 import { useAccounts } from '../context/AccountContext';
 import { useTransactions } from '../hooks/useTransactions';
 import { useCategories } from '../hooks/useCategories';
@@ -20,18 +27,38 @@ const VIEW_MODES: { value: ViewMode; label: string }[] = [
 export function TransactionsPage() {
   const { activeAccount } = useAccounts();
   const accountId = activeAccount?.id ?? null;
-  const { transactions, isLoading, create, update, remove } = useTransactions(accountId);
+  const { transactions, isLoading, create, createInstallmentPurchase, update, remove } =
+    useTransactions(accountId);
   const { categories } = useCategories(accountId);
   const { wallets, create: createWallet, update: updateWallet } = useWallets(accountId);
   const [viewMode, setViewMode] = useState<ViewMode>('monthly');
   const [searchParams, setSearchParams] = useSearchParams();
   const walletId = searchParams.get('walletId');
+  const activeWallet = walletId ? wallets.find((w) => w.id === walletId) : null;
+  const isCardView = activeWallet?.type === WalletType.CARTAO_CREDITO;
+
+  const [invoicePeriod, setInvoicePeriod] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (isCardView && activeWallet) {
+      setInvoicePeriod(currentOpenInvoicePeriod(activeWallet.closingDay));
+    } else {
+      setInvoicePeriod(null);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [walletId, isCardView]);
 
   if (!activeAccount) return <p>Nenhuma conta selecionada.</p>;
 
-  const activeWallet = walletId ? wallets.find((w) => w.id === walletId) : null;
   const filteredTransactions = walletId
-    ? transactions.filter((t) => t.walletId === walletId)
+    ? transactions.filter((t) => {
+        if (t.walletId !== walletId) return false;
+        if (isCardView && invoicePeriod) {
+          const effectivePeriod = t.invoicePeriod ?? periodOfDate(new Date(t.date));
+          return effectivePeriod === invoicePeriod;
+        }
+        return true;
+      })
     : transactions;
 
   const parentOfActiveCard =
@@ -75,6 +102,28 @@ export function TransactionsPage() {
         />
       )}
 
+      {isCardView && invoicePeriod && (
+        <div className="invoice-period-nav">
+          <button
+            type="button"
+            className="btn-icon"
+            onClick={() => setInvoicePeriod(addMonthsToPeriod(invoicePeriod, -1))}
+            aria-label="Fatura anterior"
+          >
+            ←
+          </button>
+          <span className="invoice-period-label">Fatura de {invoicePeriodLabel(invoicePeriod)}</span>
+          <button
+            type="button"
+            className="btn-icon"
+            onClick={() => setInvoicePeriod(addMonthsToPeriod(invoicePeriod, 1))}
+            aria-label="Próxima fatura"
+          >
+            →
+          </button>
+        </div>
+      )}
+
       <SpendingHistoryChart transactions={filteredTransactions} wallets={wallets} />
 
       <div className="card">
@@ -82,6 +131,7 @@ export function TransactionsPage() {
           categories={categories}
           wallets={wallets}
           onSubmit={create}
+          onSubmitInstallments={createInstallmentPurchase}
           defaultWalletId={activeWallet?.id}
         />
       </div>
