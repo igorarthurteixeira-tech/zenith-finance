@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import type { UpdateTransactionInput } from '@zenith/shared';
 import { useAccounts } from '../context/AccountContext';
 import { useTransactions } from '../hooks/useTransactions';
@@ -21,8 +22,15 @@ export function TransactionsPage() {
   const { categories } = useCategories(accountId);
   const { wallets } = useWallets(accountId);
   const [viewMode, setViewMode] = useState<ViewMode>('monthly');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const walletId = searchParams.get('walletId');
 
   if (!activeAccount) return <p>Nenhuma conta selecionada.</p>;
+
+  const activeWallet = walletId ? wallets.find((w) => w.id === walletId) : null;
+  const filteredTransactions = walletId
+    ? transactions.filter((t) => t.walletId === walletId)
+    : transactions;
 
   async function handleUpdate(transactionId: string, input: UpdateTransactionInput) {
     await update({ transactionId, input });
@@ -40,16 +48,31 @@ export function TransactionsPage() {
       </div>
 
       <div className="view-mode-bar">
-        {VIEW_MODES.map((mode) => (
-          <button
-            key={mode.value}
-            type="button"
-            className={`view-mode-btn${viewMode === mode.value ? ' active' : ''}`}
-            onClick={() => setViewMode(mode.value)}
-          >
-            {mode.label}
-          </button>
-        ))}
+        {activeWallet && (
+          <span className="wallet-filter-tag">
+            {activeWallet.name}
+            <button
+              type="button"
+              className="wallet-filter-clear"
+              onClick={() => setSearchParams({})}
+              aria-label="Remover filtro"
+            >
+              ×
+            </button>
+          </span>
+        )}
+        <div className="view-mode-group">
+          {VIEW_MODES.map((mode) => (
+            <button
+              key={mode.value}
+              type="button"
+              className={`view-mode-btn${viewMode === mode.value ? ' active' : ''}`}
+              onClick={() => setViewMode(mode.value)}
+            >
+              {mode.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       <div className="card">
@@ -57,7 +80,7 @@ export function TransactionsPage() {
           <p className="muted">Carregando...</p>
         ) : (
           <TransactionList
-            transactions={transactions}
+            transactions={filteredTransactions}
             categories={categories}
             wallets={wallets}
             onRemove={remove}

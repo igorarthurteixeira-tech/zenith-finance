@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from 'react';
+import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { useAccounts } from '../../context/AccountContext';
 import { useWallets } from '../../hooks/useWallets';
 import { Spinner } from '../ui/Spinner';
@@ -11,8 +12,21 @@ export function WalletSection() {
   const [newName, setNewName] = useState('');
   const { isPending: isCreatingWallet, run: runCreate } = useAsyncAction();
   const { pendingIds: removingIds, run: runRemove } = useAsyncSet();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [searchParams] = useSearchParams();
+  const isOnTransactions = location.pathname === '/transactions';
+  const activeWalletId = isOnTransactions ? searchParams.get('walletId') : null;
 
   if (!activeAccount) return null;
+
+  function handleWalletClick(walletId: string) {
+    if (activeWalletId === walletId) {
+      navigate('/transactions');
+    } else {
+      navigate(`/transactions?walletId=${walletId}`);
+    }
+  }
 
   async function handleCreate(e: FormEvent) {
     e.preventDefault();
@@ -31,9 +45,16 @@ export function WalletSection() {
       {wallets.length > 0 && (
         <ul className="sidebar-wallet-list">
           {wallets.map((w) => (
-            <li key={w.id} className="sidebar-wallet-item">
-              <span className="sidebar-wallet-dot" />
-              <span className="sidebar-wallet-name">{w.name}</span>
+            <li key={w.id} className={`sidebar-wallet-item${activeWalletId === w.id ? ' active' : ''}`}>
+              <button
+                type="button"
+                className="sidebar-wallet-name-btn"
+                onClick={() => handleWalletClick(w.id)}
+                title={activeWalletId === w.id ? 'Ver todas as transações' : `Filtrar por ${w.name}`}
+              >
+                <span className="sidebar-wallet-dot" />
+                <span className="sidebar-wallet-name">{w.name}</span>
+              </button>
               <button
                 type="button"
                 className="btn-icon sidebar-wallet-remove"
