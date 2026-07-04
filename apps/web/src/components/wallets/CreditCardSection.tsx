@@ -1,12 +1,20 @@
 import { useState } from 'react';
-import { TransactionType, type WalletDto, type TransactionDto, type CreateWalletInput } from '@zenith/shared';
-import { NewCardModal } from './NewCardModal';
+import {
+  TransactionType,
+  WalletType,
+  type WalletDto,
+  type TransactionDto,
+  type CreateWalletInput,
+  type UpdateWalletInput,
+} from '@zenith/shared';
+import { CardFormModal, type CardFormValues } from './CardFormModal';
 
 interface CreditCardSectionProps {
   account: WalletDto;
   cards: WalletDto[];
   transactions: TransactionDto[];
   onCreateCard: (input: CreateWalletInput) => Promise<unknown>;
+  onUpdateCard: (walletId: string, input: UpdateWalletInput) => Promise<unknown>;
   onSelectCard: (walletId: string) => void;
 }
 
@@ -19,9 +27,11 @@ export function CreditCardSection({
   cards,
   transactions,
   onCreateCard,
+  onUpdateCard,
   onSelectCard,
 }: CreditCardSectionProps) {
   const [isCreating, setIsCreating] = useState(false);
+  const [editingCard, setEditingCard] = useState<WalletDto | null>(null);
 
   return (
     <div className="card">
@@ -53,6 +63,15 @@ export function CreditCardSection({
                 <div className="credit-card-tile-header">
                   <span className="credit-card-tile-icon">💳</span>
                   <span className="credit-card-tile-name">{card.name}</span>
+                  <button
+                    type="button"
+                    className="btn-icon credit-card-tile-edit"
+                    onClick={() => setEditingCard(card)}
+                    aria-label="Editar cartão"
+                    title="Editar cartão"
+                  >
+                    ✎
+                  </button>
                 </div>
                 <div className="credit-card-tile-body">
                   <span className="stat-label">Fatura atual</span>
@@ -84,10 +103,33 @@ export function CreditCardSection({
       )}
 
       {isCreating && (
-        <NewCardModal
-          parent={account}
-          onCreate={onCreateCard}
+        <CardFormModal
+          title={`Novo cartão em ${account.name}`}
+          submitLabel="Criar cartão"
+          onSubmit={(values: CardFormValues) =>
+            onCreateCard({
+              ...values,
+              type: WalletType.CARTAO_CREDITO,
+              parentWalletId: account.id,
+            })
+          }
           onClose={() => setIsCreating(false)}
+        />
+      )}
+
+      {editingCard && (
+        <CardFormModal
+          title={`Editar ${editingCard.name}`}
+          submitLabel="Salvar"
+          initialValues={{
+            name: editingCard.name,
+            debt: Math.max(0, -Number(editingCard.initialBalance)),
+            creditLimit: editingCard.creditLimit ? Number(editingCard.creditLimit) : null,
+            closingDay: editingCard.closingDay,
+            dueDay: editingCard.dueDay,
+          }}
+          onSubmit={(values: CardFormValues) => onUpdateCard(editingCard.id, values)}
+          onClose={() => setEditingCard(null)}
         />
       )}
     </div>

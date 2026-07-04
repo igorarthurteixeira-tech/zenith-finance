@@ -22,7 +22,7 @@ export function TransactionsPage() {
   const accountId = activeAccount?.id ?? null;
   const { transactions, isLoading, create, update, remove } = useTransactions(accountId);
   const { categories } = useCategories(accountId);
-  const { wallets, create: createWallet } = useWallets(accountId);
+  const { wallets, create: createWallet, update: updateWallet } = useWallets(accountId);
   const [viewMode, setViewMode] = useState<ViewMode>('monthly');
   const [searchParams, setSearchParams] = useSearchParams();
   const walletId = searchParams.get('walletId');
@@ -70,6 +70,7 @@ export function TransactionsPage() {
           cards={cardsOfActiveAccount}
           transactions={transactions}
           onCreateCard={createWallet}
+          onUpdateCard={(walletId, input) => updateWallet({ walletId, input })}
           onSelectCard={(id) => setSearchParams({ walletId: id })}
         />
       )}
