@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { TransactionType, type TransactionDto, type CategoryDto, type WalletDto } from '@zenith/shared';
+import { TransactionType, type TransactionDto, type CategoryDto, type WalletDto, type UpdateTransactionInput } from '@zenith/shared';
 import { TransactionForm } from './TransactionForm';
 import { formatDateOnly } from '../../utils/formatDate';
 
@@ -8,7 +8,7 @@ interface TransactionListProps {
   categories: CategoryDto[];
   wallets: WalletDto[];
   onRemove: (transactionId: string) => void;
-  onUpdate: (transactionId: string, input: Partial<TransactionDto>) => Promise<unknown>;
+  onUpdate: (transactionId: string, input: UpdateTransactionInput) => Promise<unknown>;
   viewMode: ViewMode;
 }
 

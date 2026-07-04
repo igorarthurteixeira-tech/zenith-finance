@@ -4,9 +4,10 @@ import {
   IsNumberString,
   IsOptional,
   IsString,
+  IsUUID,
   MinLength,
 } from 'class-validator';
-import { InvestmentType, InvestmentLiquidity } from '@zenith/shared';
+import { InvestmentType, InvestmentLiquidity, CdbModalidade } from '@zenith/shared';
 
 export class CreateInvestmentDto {
   @IsString()
@@ -24,6 +25,18 @@ export class CreateInvestmentDto {
 
   @IsNumberString()
   rate: string;
+
+  @IsOptional()
+  @IsEnum(CdbModalidade)
+  cdbModalidade?: CdbModalidade;
+
+  @IsOptional()
+  @IsNumberString()
+  cdiRate?: string;
+
+  @IsOptional()
+  @IsUUID()
+  cardWalletId?: string;
 
   @IsDateString()
   startDate: string;

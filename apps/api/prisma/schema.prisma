@@ -38,6 +38,11 @@ enum InvestmentLiquidity {
   NO_VENCIMENTO
 }
 
+enum CdbModalidade {
+  NORMAL
+  LIMITE_GARANTIDO
+}
+
 model User {
   id            String         @id @default(uuid())
   email         String         @unique
@@ -85,6 +90,7 @@ model Wallet {
   accountId    String
   account      Account       @relation(fields: [accountId], references: [id], onDelete: Cascade)
   transactions Transaction[]
+  investments  Investment[]  @relation("investmentCard")
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
 
@@ -125,20 +131,25 @@ model Transaction {
 }
 
 model Investment {
-  id           String              @id @default(uuid())
-  name         String
-  type         InvestmentType
-  liquidity    InvestmentLiquidity
-  principal    Decimal             @db.Decimal(14, 2)
-  rate         Decimal             @db.Decimal(8, 4)
-  startDate    DateTime
-  maturityDate DateTime?
-  accountId    String
-  account      Account             @relation(fields: [accountId], references: [id], onDelete: Cascade)
-  createdAt    DateTime            @default(now())
-  updatedAt    DateTime            @updatedAt
+  id             String              @id @default(uuid())
+  name           String
+  type           InvestmentType
+  liquidity      InvestmentLiquidity
+  principal      Decimal             @db.Decimal(14, 2)
+  rate           Decimal             @db.Decimal(8, 4)
+  cdbModalidade  CdbModalidade?
+  cdiRate        Decimal?            @db.Decimal(6, 4)
+  cardWalletId   String?
+  cardWallet     Wallet?             @relation("investmentCard", fields: [cardWalletId], references: [id], onDelete: SetNull)
+  startDate      DateTime
+  maturityDate   DateTime?
+  accountId      String
+  account        Account             @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
 
   @@index([accountId])
+  @@index([cardWalletId])
 }
 
 model Transfer {

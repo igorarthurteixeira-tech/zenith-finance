@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import type { UpdateTransactionInput } from '@zenith/shared';
 import { useAccounts } from '../context/AccountContext';
 import { useTransactions } from '../hooks/useTransactions';
 import { useCategories } from '../hooks/useCategories';
@@ -23,7 +24,7 @@ export function TransactionsPage() {
 
   if (!activeAccount) return <p>Nenhuma conta selecionada.</p>;
 
-  async function handleUpdate(transactionId: string, input: Parameters<typeof update>[0]['input']) {
+  async function handleUpdate(transactionId: string, input: UpdateTransactionInput) {
     await update({ transactionId, input });
   }
 

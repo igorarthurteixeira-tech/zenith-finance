@@ -1,4 +1,4 @@
-import { AccountType, TransactionType, InvestmentType, InvestmentLiquidity } from './enums';
+import { AccountType, TransactionType, InvestmentType, InvestmentLiquidity, CdbModalidade } from './enums';
 
 export interface RegisterInput {
   name: string;
@@ -111,6 +111,9 @@ export interface InvestmentDto {
   liquidity: InvestmentLiquidity;
   principal: string;
   rate: string;
+  cdbModalidade: CdbModalidade | null;
+  cdiRate: string | null;
+  cardWalletId: string | null;
   startDate: string;
   maturityDate: string | null;
   accountId: string;
@@ -122,6 +125,9 @@ export interface CreateInvestmentInput {
   liquidity: InvestmentLiquidity;
   principal: string;
   rate: string;
+  cdbModalidade?: CdbModalidade;
+  cdiRate?: string;
+  cardWalletId?: string;
   startDate: string;
   maturityDate?: string;
 }
@@ -132,6 +138,9 @@ export interface UpdateInvestmentInput {
   liquidity?: InvestmentLiquidity;
   principal?: string;
   rate?: string;
+  cdbModalidade?: CdbModalidade;
+  cdiRate?: string;
+  cardWalletId?: string;
   startDate?: string;
   maturityDate?: string;
 }

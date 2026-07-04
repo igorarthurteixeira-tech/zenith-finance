@@ -28,3 +28,8 @@ export enum InvestmentLiquidity {
   D90 = 'D90',
   NO_VENCIMENTO = 'NO_VENCIMENTO',
 }
+
+export enum CdbModalidade {
+  NORMAL = 'NORMAL',
+  LIMITE_GARANTIDO = 'LIMITE_GARANTIDO',
+}
