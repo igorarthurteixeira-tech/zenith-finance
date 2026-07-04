@@ -6,6 +6,7 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
@@ -14,6 +15,7 @@ import { TransactionsService } from './transactions.service';
 import { CreateTransactionDto } from './dto/create-transaction.dto';
 import { UpdateTransactionDto } from './dto/update-transaction.dto';
 import { CreateInstallmentPurchaseDto } from './dto/create-installment-purchase.dto';
+import { UpdateInstallmentGroupDto } from './dto/update-installment-group.dto';
 
 @UseGuards(JwtAuthGuard, AccountMembershipGuard)
 @Controller('accounts/:accountId/transactions')
@@ -54,14 +56,31 @@ export class TransactionsController {
     return this.transactionsService.remove(transactionId);
   }
 
+  @Patch('installments/group/:installmentGroupId')
+  updateInstallmentGroup(
+    @Param('accountId') accountId: string,
+    @Param('installmentGroupId') installmentGroupId: string,
+    @Body() dto: UpdateInstallmentGroupDto,
+  ) {
+    return this.transactionsService.updateInstallmentGroup(
+      accountId,
+      installmentGroupId,
+      dto,
+    );
+  }
+
   @Delete('installments/group/:installmentGroupId')
   removeInstallmentGroup(
     @Param('accountId') accountId: string,
     @Param('installmentGroupId') installmentGroupId: string,
+    @Query('scope') scope?: string,
+    @Query('referenceDate') referenceDate?: string,
   ) {
     return this.transactionsService.removeInstallmentGroup(
       accountId,
       installmentGroupId,
+      scope,
+      referenceDate,
     );
   }
 }

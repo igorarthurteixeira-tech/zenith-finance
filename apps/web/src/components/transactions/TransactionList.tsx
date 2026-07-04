@@ -1,6 +1,13 @@
 import { useState } from 'react';
-import { TransactionType, type TransactionDto, type CategoryDto, type WalletDto, type UpdateTransactionInput } from '@zenith/shared';
-import type { ViewMode } from '../../context/ViewModeContext';
+import {
+  TransactionType,
+  type TransactionDto,
+  type CategoryDto,
+  type WalletDto,
+  type UpdateTransactionInput,
+  type UpdateInstallmentGroupInput,
+  type InstallmentGroupScope,
+} from '@zenith/shared';
 import { TransactionForm } from './TransactionForm';
 import { Modal } from '../ui/Modal';
 import { Spinner } from '../ui/Spinner';
@@ -12,68 +19,25 @@ interface TransactionListProps {
   categories: CategoryDto[];
   wallets: WalletDto[];
   onRemove: (transactionId: string) => Promise<void>;
-  onRemoveGroup?: (installmentGroupId: string) => Promise<unknown>;
+  onRemoveGroup?: (args: { installmentGroupId: string; scope?: string; referenceDate?: string }) => Promise<unknown>;
   onUpdate: (transactionId: string, input: UpdateTransactionInput) => Promise<unknown>;
-  viewMode: ViewMode;
+  onUpdateGroup?: (installmentGroupId: string, input: UpdateInstallmentGroupInput) => Promise<unknown>;
 }
 
-export type { ViewMode };
-
-interface MonthGroup {
-  label: string;
-  key: string;
-  transactions: TransactionDto[];
-  totalIncome: number;
-  totalExpense: number;
+interface ConfirmingDelete {
+  transactionId: string;
+  groupId: string;
+  date: string;
 }
 
-function getPeriodKey(date: Date, mode: ViewMode): string {
-  const y = date.getFullYear();
-  const m = date.getMonth();
-  if (mode === 'monthly') return `${y}-${String(m).padStart(2, '0')}`;
-  if (mode === 'quarterly') return `${y}-Q${Math.floor(m / 3) + 1}`;
-  if (mode === 'semester') return `${y}-S${Math.floor(m / 6) + 1}`;
-  return `${y}`;
-}
-
-function getPeriodLabel(key: string, mode: ViewMode): string {
-  if (mode === 'monthly') {
-    const [y, m] = key.split('-');
-    const date = new Date(Number(y), Number(m), 1);
-    return date.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
-  }
-  if (mode === 'quarterly') {
-    const [y, q] = key.split('-');
-    return `${q}º Trimestre de ${y}`;
-  }
-  if (mode === 'semester') {
-    const [y, s] = key.split('-');
-    return `${s.replace('S', '')}º Semestre de ${y}`;
-  }
-  return `Ano ${key}`;
-}
-
-function groupTransactions(transactions: TransactionDto[], mode: ViewMode): MonthGroup[] {
-  const map = new Map<string, TransactionDto[]>();
-
-  for (const t of transactions) {
-    const date = new Date(t.date);
-    const key = getPeriodKey(date, mode);
-    if (!map.has(key)) map.set(key, []);
-    map.get(key)!.push(t);
-  }
-
-  return Array.from(map.entries())
-    .sort(([a], [b]) => b.localeCompare(a))
-    .map(([key, txs]) => {
-      const totalIncome = txs
-        .filter((t) => t.type === TransactionType.INCOME && t.countsInTotal)
-        .reduce((s, t) => s + Number(t.amount), 0);
-      const totalExpense = txs
-        .filter((t) => t.type === TransactionType.EXPENSE && t.countsInTotal)
-        .reduce((s, t) => s + Number(t.amount), 0);
-      return { key, label: getPeriodLabel(key, mode), transactions: txs, totalIncome, totalExpense };
-    });
+function computeSummary(transactions: TransactionDto[]) {
+  const totalIncome = transactions
+    .filter((t) => t.type === TransactionType.INCOME && t.countsInTotal)
+    .reduce((s, t) => s + Number(t.amount), 0);
+  const totalExpense = transactions
+    .filter((t) => t.type === TransactionType.EXPENSE && t.countsInTotal)
+    .reduce((s, t) => s + Number(t.amount), 0);
+  return { totalIncome, totalExpense };
 }
 
 function formatBRL(value: number) {
@@ -87,106 +51,125 @@ export function TransactionList({
   onRemove,
   onRemoveGroup,
   onUpdate,
-  viewMode,
+  onUpdateGroup,
 }: TransactionListProps) {
   const [editingTransaction, setEditingTransaction] = useState<TransactionDto | null>(null);
+  const [confirmingDelete, setConfirmingDelete] = useState<ConfirmingDelete | null>(null);
   const { pendingIds: removingIds, run: runRemove } = useAsyncSet();
 
-  function handleRemoveGroup(installmentGroupId: string) {
-    if (!onRemoveGroup) return;
-    const confirmed = window.confirm(
-      'Excluir todas as parcelas dessa compra parcelada? Essa ação não pode ser desfeita.',
-    );
-    if (!confirmed) return;
-    runRemove(installmentGroupId, () => onRemoveGroup(installmentGroupId));
+  function handleDeleteClick(t: TransactionDto) {
+    if (t.installmentGroupId && onRemoveGroup) {
+      setConfirmingDelete({ transactionId: t.id, groupId: t.installmentGroupId, date: t.date });
+    } else {
+      const ok = window.confirm('Remover esta transação?');
+      if (ok) runRemove(t.id, () => onRemove(t.id));
+    }
+  }
+
+  function handleDeleteScope(scope: InstallmentGroupScope | 'single') {
+    if (!confirmingDelete || !onRemoveGroup) return;
+    const { transactionId, groupId, date } = confirmingDelete;
+    setConfirmingDelete(null);
+    if (scope === 'all') {
+      runRemove(groupId, () => onRemoveGroup({ installmentGroupId: groupId, scope: 'all' }));
+    } else if (scope === 'before') {
+      runRemove(groupId, () => onRemoveGroup({ installmentGroupId: groupId, scope: 'before', referenceDate: date }));
+    } else if (scope === 'up_to') {
+      runRemove(groupId, () => onRemoveGroup({ installmentGroupId: groupId, scope: 'up_to', referenceDate: date }));
+    } else {
+      runRemove(transactionId, () => onRemove(transactionId));
+    }
   }
 
   if (transactions.length === 0) {
     return <p className="muted">Nenhuma transação ainda.</p>;
   }
 
-  const groups = groupTransactions(transactions, viewMode);
+  const sorted = [...transactions].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  const { totalIncome, totalExpense } = computeSummary(transactions);
 
   return (
     <>
-      <div className="timeline">
-        {groups.map((group) => (
-          <div key={group.key} className="timeline-group">
-            <div className="timeline-header">
-              <span className="timeline-period">{group.label}</span>
-              <div className="timeline-summary">
-                <span className="positive">+{formatBRL(group.totalIncome)}</span>
-                <span className="negative">-{formatBRL(group.totalExpense)}</span>
-                <span className={group.totalIncome - group.totalExpense >= 0 ? 'positive' : 'negative'}>
-                  = {formatBRL(group.totalIncome - group.totalExpense)}
-                </span>
-              </div>
-            </div>
-            <ul className="transaction-list">
-              {group.transactions.map((t) => (
-                <li key={t.id}>
-                  <div className="transaction-info">
-                    <span className="transaction-description">{t.description}</span>
-                    <span className="transaction-date">{formatDateTime(t.date)}</span>
-                    {wallets.find((w) => w.id === t.walletId) && (
-                      <span className="transaction-wallet">
-                        {wallets.find((w) => w.id === t.walletId)?.name}
-                      </span>
-                    )}
-                    {!t.countsInTotal && (
-                      <span className="transaction-badge" title="Já contabilizada em outro lugar — não soma no total">
-                        histórico
-                      </span>
-                    )}
-                  </div>
-                  <span
-                    className={t.type === TransactionType.INCOME ? 'positive' : 'negative'}
-                    style={!t.countsInTotal ? { opacity: 0.55 } : undefined}
-                  >
-                    {t.type === TransactionType.INCOME ? '+' : '-'}
-                    {formatBRL(Number(t.amount))}
+      <div className="timeline-header">
+        <div className="timeline-summary">
+          <span className="positive">+{formatBRL(totalIncome)}</span>
+          <span className="negative">-{formatBRL(totalExpense)}</span>
+          <span className={totalIncome - totalExpense >= 0 ? 'positive' : 'negative'}>
+            = {formatBRL(totalIncome - totalExpense)}
+          </span>
+        </div>
+      </div>
+
+      <ul className="transaction-list">
+        {sorted.map((t) => {
+          const isConfirming = confirmingDelete?.transactionId === t.id;
+          const isRemoving = removingIds.has(t.id) || (t.installmentGroupId ? removingIds.has(t.installmentGroupId) : false);
+
+          return (
+            <li key={t.id}>
+              <div className="transaction-info">
+                <span className="transaction-description">{t.description}</span>
+                <span className="transaction-date">{formatDateTime(t.date)}</span>
+                {wallets.find((w) => w.id === t.walletId) && (
+                  <span className="transaction-wallet">
+                    {wallets.find((w) => w.id === t.walletId)?.name}
                   </span>
-                  <div className="transaction-actions">
+                )}
+                {!t.countsInTotal && (
+                  <span className="transaction-badge" title="Não soma no total — apenas histórico">
+                    histórico
+                  </span>
+                )}
+              </div>
+
+              <span
+                className={t.type === TransactionType.INCOME ? 'positive' : 'negative'}
+                style={!t.countsInTotal ? { opacity: 0.55 } : undefined}
+              >
+                {t.type === TransactionType.INCOME ? '+' : '-'}
+                {formatBRL(Number(t.amount))}
+              </span>
+
+              <div className="transaction-actions">
+                {isConfirming ? (
+                  <div className="delete-scope-bar">
+                    <span className="delete-scope-label">Excluir:</span>
+                    <button type="button" className="btn-scope" onClick={() => handleDeleteScope('all' as InstallmentGroupScope)}>Todas</button>
+                    <button type="button" className="btn-scope" onClick={() => handleDeleteScope('up_to' as InstallmentGroupScope)}>Esta e anteriores</button>
+                    <button type="button" className="btn-scope" onClick={() => handleDeleteScope('before' as InstallmentGroupScope)}>Anteriores</button>
+                    <button type="button" className="btn-scope btn-scope-single" onClick={() => handleDeleteScope('single')}>Só esta</button>
+                    <button type="button" className="btn-scope btn-scope-cancel" onClick={() => setConfirmingDelete(null)}>Cancelar</button>
+                  </div>
+                ) : (
+                  <>
                     <button
                       type="button"
                       className="btn-icon btn-icon-edit"
                       onClick={() => setEditingTransaction(t)}
                       aria-label="Editar"
                       title="Editar"
+                      disabled={isRemoving}
                     >
                       ✎
                     </button>
-                    {t.installmentGroupId && onRemoveGroup && (
-                      <button
-                        type="button"
-                        className="btn-icon"
-                        onClick={() => handleRemoveGroup(t.installmentGroupId!)}
-                        disabled={removingIds.has(t.installmentGroupId)}
-                        aria-busy={removingIds.has(t.installmentGroupId)}
-                        aria-label="Excluir parcelamento inteiro"
-                        title="Excluir parcelamento inteiro (todas as parcelas)"
-                      >
-                        {removingIds.has(t.installmentGroupId) ? <Spinner /> : '🗑'}
-                      </button>
-                    )}
                     <button
                       type="button"
                       className="btn-icon"
-                      onClick={() => runRemove(t.id, () => onRemove(t.id))}
-                      disabled={removingIds.has(t.id)}
-                      aria-busy={removingIds.has(t.id)}
+                      onClick={() => handleDeleteClick(t)}
+                      disabled={isRemoving}
+                      aria-busy={isRemoving}
                       aria-label="Remover"
-                      title="Remover apenas essa parcela"
+                      title={t.installmentGroupId ? 'Remover parcela(s)' : 'Remover'}
                     >
-                      {removingIds.has(t.id) ? <Spinner /> : '×'}
+                      {isRemoving ? <Spinner /> : '×'}
                     </button>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          </div>
-        ))}
-      </div>
+                  </>
+                )}
+              </div>
+            </li>
+          );
+        })}
+      </ul>
 
       {editingTransaction && (
         <Modal title="Editar transação" onClose={() => setEditingTransaction(null)}>
@@ -198,6 +181,10 @@ export function TransactionList({
               await onUpdate(editingTransaction.id, input);
               setEditingTransaction(null);
             }}
+            onUpdateGroup={onUpdateGroup ? async (groupId, input) => {
+              await onUpdateGroup(groupId, input);
+              setEditingTransaction(null);
+            } : undefined}
             onCancel={() => setEditingTransaction(null)}
           />
         </Modal>

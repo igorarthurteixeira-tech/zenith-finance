@@ -107,6 +107,18 @@ export interface UpdateTransactionInput {
   categoryId?: string;
   walletId?: string;
   invoicePeriod?: string;
+  countsInTotal?: boolean;
+}
+
+export type InstallmentGroupScope = 'all' | 'before' | 'up_to';
+
+export interface UpdateInstallmentGroupInput {
+  description?: string;
+  type?: TransactionType;
+  categoryId?: string;
+  countsInTotal?: boolean;
+  scope?: InstallmentGroupScope;
+  referenceDate?: string;
 }
 
 export interface CreateInstallmentPurchaseInput {

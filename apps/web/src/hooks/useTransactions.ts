@@ -3,6 +3,7 @@ import type {
   CreateInstallmentPurchaseInput,
   CreateTransactionInput,
   UpdateTransactionInput,
+  UpdateInstallmentGroupInput,
 } from '@zenith/shared';
 import { transactionsApi } from '../api/transactions';
 
@@ -40,9 +41,15 @@ export function useTransactions(accountId: string | null) {
     onSuccess: () => queryClient.invalidateQueries({ queryKey }),
   });
 
+  const updateInstallmentGroupMutation = useMutation({
+    mutationFn: ({ installmentGroupId, input }: { installmentGroupId: string; input: UpdateInstallmentGroupInput }) =>
+      transactionsApi.updateInstallmentGroup(accountId!, installmentGroupId, input),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey }),
+  });
+
   const removeInstallmentGroupMutation = useMutation({
-    mutationFn: (installmentGroupId: string) =>
-      transactionsApi.removeInstallmentGroup(accountId!, installmentGroupId),
+    mutationFn: ({ installmentGroupId, scope, referenceDate }: { installmentGroupId: string; scope?: string; referenceDate?: string }) =>
+      transactionsApi.removeInstallmentGroup(accountId!, installmentGroupId, scope, referenceDate),
     onSuccess: () => queryClient.invalidateQueries({ queryKey }),
   });
 
@@ -53,6 +60,8 @@ export function useTransactions(accountId: string | null) {
     update: updateMutation.mutateAsync,
     remove: removeMutation.mutateAsync,
     createInstallmentPurchase: createInstallmentPurchaseMutation.mutateAsync,
-    removeInstallmentGroup: removeInstallmentGroupMutation.mutateAsync,
+    updateInstallmentGroup: updateInstallmentGroupMutation.mutateAsync,
+    removeInstallmentGroup: (args: { installmentGroupId: string; scope?: string; referenceDate?: string }) =>
+      removeInstallmentGroupMutation.mutateAsync(args),
   };
 }

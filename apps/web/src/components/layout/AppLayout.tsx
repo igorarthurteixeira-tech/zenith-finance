@@ -1,6 +1,6 @@
 import { NavLink, Outlet } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { useViewMode, VIEW_MODE_OPTIONS } from '../../context/ViewModeContext';
+import { useViewMode } from '../../context/ViewModeContext';
 import { AccountSwitcher } from './AccountSwitcher';
 import { WalletSection } from './WalletSection';
 
@@ -16,7 +16,7 @@ const NAV_ITEMS = [
 
 export function AppLayout() {
   const { user, logout } = useAuth();
-  const { viewMode, setViewMode } = useViewMode();
+  const { periodRange, goToPrevMonth, goToNextMonth } = useViewMode();
 
   return (
     <div className="app-shell">
@@ -59,17 +59,10 @@ export function AppLayout() {
       <div className="app-content">
         <header className="app-topbar">
           <AccountSwitcher />
-          <div className="topbar-view-mode">
-            {VIEW_MODE_OPTIONS.map((opt) => (
-              <button
-                key={opt.value}
-                type="button"
-                className={`topbar-view-btn${viewMode === opt.value ? ' active' : ''}`}
-                onClick={() => setViewMode(opt.value)}
-              >
-                {opt.label}
-              </button>
-            ))}
+          <div className="topbar-period-nav">
+            <button type="button" className="topbar-period-arrow" onClick={goToPrevMonth} aria-label="Mês anterior">‹</button>
+            <span className="topbar-period-label">{periodRange.label}</span>
+            <button type="button" className="topbar-period-arrow" onClick={goToNextMonth} aria-label="Próximo mês">›</button>
           </div>
         </header>
         <main className="app-main">

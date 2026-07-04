@@ -3,6 +3,7 @@ import type {
   CreateTransactionInput,
   TransactionDto,
   UpdateTransactionInput,
+  UpdateInstallmentGroupInput,
 } from '@zenith/shared';
 import { apiClient } from './client';
 
@@ -23,8 +24,18 @@ export const transactionsApi = {
     ),
   remove: (accountId: string, transactionId: string) =>
     apiClient.delete<void>(`/accounts/${accountId}/transactions/${transactionId}`),
-  removeInstallmentGroup: (accountId: string, installmentGroupId: string) =>
-    apiClient.delete<void>(
+  updateInstallmentGroup: (accountId: string, installmentGroupId: string, input: UpdateInstallmentGroupInput) =>
+    apiClient.patch<void>(
       `/accounts/${accountId}/transactions/installments/group/${installmentGroupId}`,
+      input,
     ),
+  removeInstallmentGroup: (accountId: string, installmentGroupId: string, scope?: string, referenceDate?: string) => {
+    const params = new URLSearchParams();
+    if (scope) params.set('scope', scope);
+    if (referenceDate) params.set('referenceDate', referenceDate);
+    const qs = params.toString();
+    return apiClient.delete<void>(
+      `/accounts/${accountId}/transactions/installments/group/${installmentGroupId}${qs ? `?${qs}` : ''}`,
+    );
+  },
 };

@@ -11,6 +11,7 @@ import {
   type WalletDto,
   type TransactionDto,
   type CreateInstallmentPurchaseInput,
+  type UpdateInstallmentGroupInput,
 } from '@zenith/shared';
 import { Spinner } from '../ui/Spinner';
 import { useAsyncAction } from '../../hooks/useAsyncAction';
@@ -38,6 +39,7 @@ interface TransactionFormProps {
     invoicePeriod?: string;
   }) => Promise<unknown>;
   onSubmitInstallments?: (input: CreateInstallmentPurchaseInput) => Promise<unknown>;
+  onUpdateGroup?: (installmentGroupId: string, input: UpdateInstallmentGroupInput) => Promise<unknown>;
   onCancel?: () => void;
   initialValues?: TransactionDto;
   defaultWalletId?: string;
@@ -48,12 +50,14 @@ export function TransactionForm({
   wallets,
   onSubmit,
   onSubmitInstallments,
+  onUpdateGroup,
   onCancel,
   initialValues,
   defaultWalletId,
 }: TransactionFormProps) {
   const isEditing = !!initialValues;
   const { isPending, run } = useAsyncAction();
+  const [applyToGroup, setApplyToGroup] = useState(false);
 
   const [description, setDescription] = useState(initialValues?.description ?? '');
   const [amount, setAmount] = useState(initialValues?.amount ?? '');
@@ -66,6 +70,8 @@ export function TransactionForm({
     initialValues?.walletId ?? defaultWalletId ?? (wallets[0]?.id ?? ''),
   );
 
+  const [countsInTotal, setCountsInTotal] = useState(initialValues?.countsInTotal ?? true);
+  const [groupScope, setGroupScope] = useState<'single' | 'before' | 'up_to' | 'all'>('single');
   const [invoicePeriod, setInvoicePeriod] = useState('');
   const [isInstallmentPurchase, setIsInstallmentPurchase] = useState(false);
   const [amountMode, setAmountMode] = useState<InstallmentAmountMode>(InstallmentAmountMode.TOTAL);
@@ -112,6 +118,20 @@ export function TransactionForm({
     event.preventDefault();
     if (!description.trim() || !amount || !walletId) return;
 
+    if (isEditing && groupScope !== 'single' && initialValues?.installmentGroupId && onUpdateGroup) {
+      await run(async () => {
+        await onUpdateGroup(initialValues.installmentGroupId!, {
+          description,
+          type,
+          categoryId: categoryId || undefined,
+          countsInTotal,
+          scope: groupScope,
+          referenceDate: groupScope !== 'all' ? new Date(date).toISOString() : undefined,
+        });
+      });
+      return;
+    }
+
     if (isInstallmentPurchase && totalInstallmentsNum > 1 && onSubmitInstallments) {
       await run(async () => {
         const resolvedStartPeriod = isCardWallet
@@ -148,6 +168,7 @@ export function TransactionForm({
         categoryId: categoryId || undefined,
         walletId,
         invoicePeriod: isCardWallet ? invoicePeriod : undefined,
+        ...(isEditing && { countsInTotal }),
       });
       if (!isEditing) {
         setDescription('');
@@ -272,6 +293,40 @@ export function TransactionForm({
               saldo inicial).
             </label>
           )}
+        </div>
+      )}
+
+      {isEditing && (
+        <label className="installment-toggle">
+          <input
+            type="checkbox"
+            checked={countsInTotal}
+            onChange={(e) => setCountsInTotal(e.target.checked)}
+            disabled={isPending}
+          />
+          Contar nos totais (desmarque para transformar em histórico)
+        </label>
+      )}
+
+      {isEditing && initialValues?.installmentGroupId && onUpdateGroup && (
+        <div className="group-scope-panel">
+          <span className="input-label">Aplicar alteração a:</span>
+          {(['single', 'before', 'up_to', 'all'] as const).map((s) => (
+            <label key={s} className="scope-option">
+              <input
+                type="radio"
+                name="groupScope"
+                value={s}
+                checked={groupScope === s}
+                onChange={() => setGroupScope(s)}
+                disabled={isPending}
+              />
+              {s === 'single' ? 'Só esta parcela'
+                : s === 'before' ? 'Anteriores'
+                : s === 'up_to' ? 'Esta e anteriores'
+                : 'Todas'}
+            </label>
+          ))}
         </div>
       )}
 

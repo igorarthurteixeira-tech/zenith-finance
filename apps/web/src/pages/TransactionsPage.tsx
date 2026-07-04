@@ -27,12 +27,13 @@ export function TransactionsPage() {
     create,
     createInstallmentPurchase,
     update,
+    updateInstallmentGroup,
     remove,
     removeInstallmentGroup,
   } = useTransactions(accountId);
   const { categories } = useCategories(accountId);
   const { wallets, create: createWallet, update: updateWallet } = useWallets(accountId);
-  const { viewMode } = useViewMode();
+  const { periodRange } = useViewMode();
   const [searchParams, setSearchParams] = useSearchParams();
   const walletId = searchParams.get('walletId');
   const activeWallet = walletId ? wallets.find((w) => w.id === walletId) : null;
@@ -51,16 +52,15 @@ export function TransactionsPage() {
 
   if (!activeAccount) return <p>Nenhuma conta selecionada.</p>;
 
-  const filteredTransactions = walletId
-    ? transactions.filter((t) => {
-        if (t.walletId !== walletId) return false;
-        if (isCardView && invoicePeriod) {
-          const effectivePeriod = t.invoicePeriod ?? periodOfDate(new Date(t.date));
-          return effectivePeriod === invoicePeriod;
-        }
-        return true;
-      })
-    : transactions;
+  const filteredTransactions = transactions.filter((t) => {
+    if (walletId && t.walletId !== walletId) return false;
+    if (isCardView && invoicePeriod) {
+      const effectivePeriod = t.invoicePeriod ?? periodOfDate(new Date(t.date));
+      return effectivePeriod === invoicePeriod;
+    }
+    const d = new Date(t.date);
+    return d >= periodRange.start && d <= periodRange.end;
+  });
 
   const parentOfActiveCard =
     activeWallet?.type === WalletType.CARTAO_CREDITO
@@ -164,7 +164,7 @@ export function TransactionsPage() {
             onRemove={remove}
             onRemoveGroup={removeInstallmentGroup}
             onUpdate={handleUpdate}
-            viewMode={viewMode}
+            onUpdateGroup={async (groupId, input) => updateInstallmentGroup({ installmentGroupId: groupId, input })}
           />
         )}
       </div>

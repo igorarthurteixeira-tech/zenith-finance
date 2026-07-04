@@ -2,7 +2,7 @@ import { TransactionType } from '@zenith/shared';
 import { useAccounts } from '../context/AccountContext';
 import { useTransactions } from '../hooks/useTransactions';
 import { useWallets } from '../hooks/useWallets';
-import { useViewMode, getPeriodRange } from '../context/ViewModeContext';
+import { useViewMode } from '../context/ViewModeContext';
 import { formatDateTime } from '../utils/formatDate';
 
 function formatCurrency(value: number) {
@@ -13,11 +13,11 @@ export function DashboardPage() {
   const { activeAccount } = useAccounts();
   const { transactions, isLoading } = useTransactions(activeAccount?.id ?? null);
   const { wallets } = useWallets(activeAccount?.id ?? null);
-  const { viewMode } = useViewMode();
+  const { periodRange } = useViewMode();
+  const { start: periodStart, end: periodEnd, label: periodLabel } = periodRange;
 
   const now = new Date();
   const todayEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
-  const { start: periodStart, end: periodEnd, label: periodLabel } = getPeriodRange(viewMode, now);
 
   const inPeriod = transactions.filter((t) => {
     const d = new Date(t.date);
