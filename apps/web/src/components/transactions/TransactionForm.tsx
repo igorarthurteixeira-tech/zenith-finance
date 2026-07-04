@@ -37,6 +37,7 @@ interface TransactionFormProps {
     categoryId?: string;
     walletId: string;
     invoicePeriod?: string;
+    countsInTotal?: boolean;
   }) => Promise<unknown>;
   onSubmitInstallments?: (input: CreateInstallmentPurchaseInput) => Promise<unknown>;
   onUpdateGroup?: (installmentGroupId: string, input: UpdateInstallmentGroupInput) => Promise<unknown>;
@@ -57,8 +58,6 @@ export function TransactionForm({
 }: TransactionFormProps) {
   const isEditing = !!initialValues;
   const { isPending, run } = useAsyncAction();
-  const [applyToGroup, setApplyToGroup] = useState(false);
-
   const [description, setDescription] = useState(initialValues?.description ?? '');
   const [amount, setAmount] = useState(initialValues?.amount ?? '');
   const [type, setType] = useState<TransactionType>(initialValues?.type ?? TransactionType.EXPENSE);
