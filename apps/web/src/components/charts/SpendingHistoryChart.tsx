@@ -23,9 +23,13 @@ function dateKeyOf(date: Date): string {
 function buildPoints(transactions: TransactionDto[], wallets: WalletDto[]): ChartPoint[] {
   const startingBalance = wallets.reduce((sum, w) => sum + Number(w.initialBalance), 0);
 
+  const todayEnd = new Date();
+  todayEnd.setHours(23, 59, 59, 999);
+
   const dayDeltas = new Map<string, number>();
   for (const t of transactions) {
     if (!t.countsInTotal) continue;
+    if (new Date(t.date) > todayEnd) continue; // ignora parcelas futuras
     const key = dateKeyOf(new Date(t.date));
     const delta = t.type === TransactionType.INCOME ? Number(t.amount) : -Number(t.amount);
     dayDeltas.set(key, (dayDeltas.get(key) ?? 0) + delta);

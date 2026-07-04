@@ -13,19 +13,31 @@ export function DashboardPage() {
   const { transactions, isLoading } = useTransactions(activeAccount?.id ?? null);
   const { wallets } = useWallets(activeAccount?.id ?? null);
 
-  const income = transactions
-    .filter((t) => t.type === TransactionType.INCOME && t.countsInTotal)
-    .reduce((sum, t) => sum + Number(t.amount), 0);
-  const expense = transactions
-    .filter((t) => t.type === TransactionType.EXPENSE && t.countsInTotal)
-    .reduce((sum, t) => sum + Number(t.amount), 0);
-  // Saldos iniciais (ou dívidas já existentes) entram no saldo total, mas não
-  // são receita nem despesa de fato — por isso ficam de fora de income/expense.
-  const initialBalances = wallets.reduce(
-    (sum, w) => sum + Number(w.initialBalance),
-    0,
+  const now = new Date();
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+  const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+  const todayEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+
+  const thisMonth = transactions.filter((t) => {
+    const d = new Date(t.date);
+    return t.countsInTotal && d >= monthStart && d <= monthEnd;
+  });
+  const realized = transactions.filter(
+    (t) => t.countsInTotal && new Date(t.date) <= todayEnd,
   );
-  const balance = income - expense + initialBalances;
+
+  const income = thisMonth
+    .filter((t) => t.type === TransactionType.INCOME)
+    .reduce((sum, t) => sum + Number(t.amount), 0);
+  const expense = thisMonth
+    .filter((t) => t.type === TransactionType.EXPENSE)
+    .reduce((sum, t) => sum + Number(t.amount), 0);
+
+  // Saldo = tudo realizado até hoje + saldos iniciais
+  const initialBalances = wallets.reduce((sum, w) => sum + Number(w.initialBalance), 0);
+  const realizedIncome = realized.filter((t) => t.type === TransactionType.INCOME).reduce((s, t) => s + Number(t.amount), 0);
+  const realizedExpense = realized.filter((t) => t.type === TransactionType.EXPENSE).reduce((s, t) => s + Number(t.amount), 0);
+  const balance = realizedIncome - realizedExpense + initialBalances;
 
   if (!activeAccount) {
     return <p>Nenhuma conta selecionada.</p>;
@@ -40,15 +52,15 @@ export function DashboardPage() {
 
       <div className="stat-grid">
         <div className="stat-card stat-card-primary">
-          <span className="stat-label">Saldo</span>
+          <span className="stat-label">Saldo atual</span>
           <span className="stat-value">{formatCurrency(balance)}</span>
         </div>
         <div className="stat-card">
-          <span className="stat-label">Receitas</span>
+          <span className="stat-label">Receitas do mês</span>
           <span className="stat-value positive">{formatCurrency(income)}</span>
         </div>
         <div className="stat-card">
-          <span className="stat-label">Despesas</span>
+          <span className="stat-label">Despesas do mês</span>
           <span className="stat-value negative">{formatCurrency(expense)}</span>
         </div>
       </div>

@@ -27,6 +27,7 @@ function computeGoalProgress(transactions: TransactionDto[]): {
   const byMonth = new Map<string, { income: number; expense: number }>();
 
   for (const t of transactions) {
+    if (!t.countsInTotal) continue;
     const date = new Date(t.date);
     const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
     if (!byMonth.has(key)) byMonth.set(key, { income: 0, expense: 0 });
