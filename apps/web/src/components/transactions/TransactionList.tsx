@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { TransactionType, type TransactionDto, type CategoryDto, type WalletDto, type UpdateTransactionInput } from '@zenith/shared';
 import { TransactionForm } from './TransactionForm';
+import { Modal } from '../ui/Modal';
 import { formatDateOnly } from '../../utils/formatDate';
 
 interface TransactionListProps {
@@ -72,7 +73,7 @@ function formatBRL(value: number) {
 }
 
 export function TransactionList({ transactions, categories, wallets, onRemove, onUpdate, viewMode }: TransactionListProps) {
-  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingTransaction, setEditingTransaction] = useState<TransactionDto | null>(null);
 
   if (transactions.length === 0) {
     return <p className="muted">Nenhuma transação ainda.</p>;
@@ -81,77 +82,77 @@ export function TransactionList({ transactions, categories, wallets, onRemove, o
   const groups = groupTransactions(transactions, viewMode);
 
   return (
-    <div className="timeline">
-      {groups.map((group) => (
-        <div key={group.key} className="timeline-group">
-          <div className="timeline-header">
-            <span className="timeline-period">{group.label}</span>
-            <div className="timeline-summary">
-              <span className="positive">+{formatBRL(group.totalIncome)}</span>
-              <span className="negative">-{formatBRL(group.totalExpense)}</span>
-              <span className={group.totalIncome - group.totalExpense >= 0 ? 'positive' : 'negative'}>
-                = {formatBRL(group.totalIncome - group.totalExpense)}
-              </span>
+    <>
+      <div className="timeline">
+        {groups.map((group) => (
+          <div key={group.key} className="timeline-group">
+            <div className="timeline-header">
+              <span className="timeline-period">{group.label}</span>
+              <div className="timeline-summary">
+                <span className="positive">+{formatBRL(group.totalIncome)}</span>
+                <span className="negative">-{formatBRL(group.totalExpense)}</span>
+                <span className={group.totalIncome - group.totalExpense >= 0 ? 'positive' : 'negative'}>
+                  = {formatBRL(group.totalIncome - group.totalExpense)}
+                </span>
+              </div>
             </div>
-          </div>
-          <ul className="transaction-list">
-            {group.transactions.map((t) => (
-              <li key={t.id}>
-                {editingId === t.id ? (
-                  <div className="transaction-edit-form">
-                    <TransactionForm
-                      categories={categories}
-                      wallets={wallets}
-                      initialValues={t}
-                      onSubmit={async (input) => {
-                        await onUpdate(t.id, input);
-                        setEditingId(null);
-                      }}
-                      onCancel={() => setEditingId(null)}
-                    />
+            <ul className="transaction-list">
+              {group.transactions.map((t) => (
+                <li key={t.id}>
+                  <div className="transaction-info">
+                    <span className="transaction-description">{t.description}</span>
+                    <span className="transaction-date">{formatDateOnly(t.date)}</span>
+                    {wallets.find((w) => w.id === t.walletId) && (
+                      <span className="transaction-wallet">
+                        {wallets.find((w) => w.id === t.walletId)?.name}
+                      </span>
+                    )}
                   </div>
-                ) : (
-                  <>
-                    <div className="transaction-info">
-                      <span className="transaction-description">{t.description}</span>
-                      <span className="transaction-date">{formatDateOnly(t.date)}</span>
-                      {wallets.find((w) => w.id === t.walletId) && (
-                        <span className="transaction-wallet">
-                          {wallets.find((w) => w.id === t.walletId)?.name}
-                        </span>
-                      )}
-                    </div>
-                    <span className={t.type === TransactionType.INCOME ? 'positive' : 'negative'}>
-                      {t.type === TransactionType.INCOME ? '+' : '-'}
-                      {formatBRL(Number(t.amount))}
-                    </span>
-                    <div className="transaction-actions">
-                      <button
-                        type="button"
-                        className="btn-icon"
-                        onClick={() => setEditingId(t.id)}
-                        aria-label="Editar"
-                        title="Editar"
-                      >
-                        ✎
-                      </button>
-                      <button
-                        type="button"
-                        className="btn-icon"
-                        onClick={() => onRemove(t.id)}
-                        aria-label="Remover"
-                        title="Remover"
-                      >
-                        ×
-                      </button>
-                    </div>
-                  </>
-                )}
-              </li>
-            ))}
-          </ul>
-        </div>
-      ))}
-    </div>
+                  <span className={t.type === TransactionType.INCOME ? 'positive' : 'negative'}>
+                    {t.type === TransactionType.INCOME ? '+' : '-'}
+                    {formatBRL(Number(t.amount))}
+                  </span>
+                  <div className="transaction-actions">
+                    <button
+                      type="button"
+                      className="btn-icon btn-icon-edit"
+                      onClick={() => setEditingTransaction(t)}
+                      aria-label="Editar"
+                      title="Editar"
+                    >
+                      ✎
+                    </button>
+                    <button
+                      type="button"
+                      className="btn-icon"
+                      onClick={() => onRemove(t.id)}
+                      aria-label="Remover"
+                      title="Remover"
+                    >
+                      ×
+                    </button>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
+      </div>
+
+      {editingTransaction && (
+        <Modal title="Editar transação" onClose={() => setEditingTransaction(null)}>
+          <TransactionForm
+            categories={categories}
+            wallets={wallets}
+            initialValues={editingTransaction}
+            onSubmit={async (input) => {
+              await onUpdate(editingTransaction.id, input);
+              setEditingTransaction(null);
+            }}
+            onCancel={() => setEditingTransaction(null)}
+          />
+        </Modal>
+      )}
+    </>
   );
 }
