@@ -563,3 +563,386 @@ select:focus {
   background: var(--color-negative-tint);
   color: var(--color-negative);
 }
+
+/* ---------- Sidebar wallet section ---------- */
+
+.sidebar-wallet-section {
+  border-top: 1px solid var(--color-sidebar-border);
+  padding-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.sidebar-section-title {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #475569;
+  padding: 0 0.5rem;
+  margin-bottom: 0.15rem;
+}
+
+.sidebar-wallet-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.sidebar-wallet-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.5rem;
+  border-radius: var(--radius-sm);
+  color: var(--color-sidebar-text);
+  font-size: 0.88rem;
+}
+
+.sidebar-wallet-item:hover {
+  background: var(--color-sidebar-border);
+}
+
+.sidebar-wallet-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #4f46e5;
+  flex-shrink: 0;
+}
+
+.sidebar-wallet-name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sidebar-wallet-remove {
+  opacity: 0;
+  color: #64748b;
+  width: 1.4rem;
+  height: 1.4rem;
+  font-size: 1rem;
+}
+
+.sidebar-wallet-item:hover .sidebar-wallet-remove {
+  opacity: 1;
+}
+
+.sidebar-wallet-add {
+  background: transparent;
+  color: #64748b;
+  font-size: 0.83rem;
+  padding: 0.35rem 0.5rem;
+  text-align: left;
+  border-radius: var(--radius-sm);
+  font-weight: 500;
+}
+
+.sidebar-wallet-add:hover {
+  background: var(--color-sidebar-border);
+  color: white;
+}
+
+.sidebar-wallet-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: 0.25rem 0;
+}
+
+.sidebar-wallet-form-actions {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.sidebar-input {
+  background: var(--color-sidebar-border);
+  border-color: transparent;
+  color: white;
+  width: 100%;
+}
+
+.sidebar-input::placeholder {
+  color: #64748b;
+}
+
+.sidebar-input:focus {
+  border-color: var(--color-accent);
+  background: #1e293b;
+}
+
+/* ---------- View mode bar ---------- */
+
+.view-mode-bar {
+  display: flex;
+  gap: 0.35rem;
+  margin-bottom: 1rem;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 0.35rem;
+  width: fit-content;
+  box-shadow: var(--shadow-sm);
+}
+
+.view-mode-btn {
+  background: transparent;
+  color: var(--color-text-muted);
+  padding: 0.4rem 0.9rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.88rem;
+  font-weight: 500;
+}
+
+.view-mode-btn:hover {
+  background: var(--color-bg);
+  color: var(--color-text);
+}
+
+.view-mode-btn.active {
+  background: var(--color-accent);
+  color: white;
+  font-weight: 600;
+}
+
+/* ---------- Timeline ---------- */
+
+.timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 1.75rem;
+}
+
+.timeline-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.timeline-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 0.6rem;
+  border-bottom: 2px solid var(--color-border);
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.timeline-period {
+  font-size: 0.88rem;
+  font-weight: 700;
+  text-transform: capitalize;
+  color: var(--color-text-muted);
+  letter-spacing: 0.01em;
+}
+
+.timeline-summary {
+  display: flex;
+  gap: 1rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+/* ---------- Transaction item extras ---------- */
+
+.transaction-wallet {
+  font-size: 0.75rem;
+  color: var(--color-accent);
+  background: var(--color-accent-tint);
+  padding: 0.1rem 0.5rem;
+  border-radius: 999px;
+  width: fit-content;
+  margin-top: 0.15rem;
+}
+
+.transaction-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.1rem;
+}
+
+.transaction-edit-form {
+  width: 100%;
+  padding: 0.5rem 0;
+}
+
+/* ---------- Investments summary ---------- */
+
+.investments-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.summary-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 1.1rem 1.25rem;
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.summary-card-credit {
+  border-color: var(--color-accent);
+  background: var(--color-accent-tint);
+}
+
+.summary-card-credit .summary-label {
+  color: var(--color-accent);
+}
+
+.summary-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.summary-value {
+  font-size: 1.35rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+/* ---------- Investment list ---------- */
+
+.investment-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.investment-item {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+  padding: 1rem 1.1rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  transition: box-shadow 0.15s ease;
+}
+
+.investment-item:hover {
+  box-shadow: var(--shadow-md);
+}
+
+.investment-item-limite {
+  border-color: var(--color-accent);
+  background: linear-gradient(135deg, #fafafe 0%, var(--color-accent-tint) 100%);
+}
+
+.investment-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.investment-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.investment-name {
+  font-weight: 600;
+  font-size: 0.97rem;
+}
+
+.investment-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.15rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.73rem;
+  font-weight: 600;
+  background: var(--color-bg);
+  color: var(--color-text-muted);
+  border: 1px solid var(--color-border);
+}
+
+.investment-badge-credit {
+  background: var(--color-accent-tint);
+  color: var(--color-accent);
+  border-color: var(--color-accent);
+}
+
+.investment-badge-wallet {
+  background: var(--color-positive-tint);
+  color: var(--color-positive);
+  border-color: var(--color-positive);
+}
+
+.investment-details {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  font-size: 0.82rem;
+  color: var(--color-text-muted);
+}
+
+.investment-return {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.2rem;
+  min-width: 130px;
+  text-align: right;
+}
+
+.investment-gross {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.investment-credit-label {
+  font-size: 0.78rem;
+  color: var(--color-accent);
+  font-weight: 600;
+}
+
+/* ---------- Investment form ---------- */
+
+.investment-form {
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.investment-form input,
+.investment-form select {
+  width: 100%;
+  max-width: 380px;
+}
+
+.input-label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  font-size: 0.83rem;
+  font-weight: 500;
+  color: var(--color-text-muted);
+  width: 100%;
+  max-width: 380px;
+}
+
+.input-label input {
+  width: 100%;
+}

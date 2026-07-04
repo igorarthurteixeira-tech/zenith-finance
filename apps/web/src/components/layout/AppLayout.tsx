@@ -1,6 +1,7 @@
 import { NavLink, Outlet } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { AccountSwitcher } from './AccountSwitcher';
+import { WalletSection } from './WalletSection';
 
 const NAV_ITEMS = [
   { to: '/', label: 'Dashboard', end: true },
@@ -35,6 +36,8 @@ export function AppLayout() {
             </NavLink>
           ))}
         </nav>
+
+        <WalletSection />
 
         <div className="app-sidebar-footer">
           <div className="app-user">
