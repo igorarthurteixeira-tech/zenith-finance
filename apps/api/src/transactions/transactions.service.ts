@@ -4,6 +4,7 @@ import type { Prisma } from '@prisma/client';
 import {
   addMonthsToPeriod,
   shiftDateByMonths,
+  periodOfDate,
   InstallmentAmountMode,
 } from '@zenith/shared';
 import { PrismaService } from '../prisma/prisma.service';
@@ -125,20 +126,41 @@ export class TransactionsService {
     return {};
   }
 
-  updateInstallmentGroup(
+  async updateInstallmentGroup(
     accountId: string,
     installmentGroupId: string,
     dto: UpdateInstallmentGroupDto,
   ) {
     const scopeFilter = this.buildScopeFilter(dto.scope, dto.referenceDate);
+    const commonData = {
+      ...(dto.description !== undefined && { description: dto.description }),
+      ...(dto.type !== undefined && { type: dto.type }),
+      ...(dto.categoryId !== undefined && { categoryId: dto.categoryId }),
+      ...(dto.countsInTotal !== undefined && { countsInTotal: dto.countsInTotal }),
+    };
+
+    if (dto.walletId !== undefined) {
+      const rows = await this.prisma.transaction.findMany({
+        where: { accountId, installmentGroupId, ...scopeFilter },
+        select: { id: true, date: true },
+      });
+      return this.prisma.$transaction(
+        rows.map((t) =>
+          this.prisma.transaction.update({
+            where: { id: t.id },
+            data: {
+              ...commonData,
+              walletId: dto.walletId,
+              invoicePeriod: periodOfDate(t.date),
+            },
+          }),
+        ),
+      );
+    }
+
     return this.prisma.transaction.updateMany({
       where: { accountId, installmentGroupId, ...scopeFilter },
-      data: {
-        ...(dto.description !== undefined && { description: dto.description }),
-        ...(dto.type !== undefined && { type: dto.type }),
-        ...(dto.categoryId !== undefined && { categoryId: dto.categoryId }),
-        ...(dto.countsInTotal !== undefined && { countsInTotal: dto.countsInTotal }),
-      },
+      data: commonData,
     });
   }
 

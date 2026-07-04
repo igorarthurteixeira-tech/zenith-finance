@@ -124,6 +124,7 @@ export function TransactionForm({
           description,
           type,
           categoryId: categoryId || undefined,
+          walletId,
           countsInTotal,
           scope: groupScope,
           referenceDate: groupScope !== 'all' ? new Date(date).toISOString() : undefined,

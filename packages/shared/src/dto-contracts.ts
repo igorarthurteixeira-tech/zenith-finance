@@ -116,6 +116,7 @@ export interface UpdateInstallmentGroupInput {
   description?: string;
   type?: TransactionType;
   categoryId?: string;
+  walletId?: string;
   countsInTotal?: boolean;
   scope?: InstallmentGroupScope;
   referenceDate?: string;

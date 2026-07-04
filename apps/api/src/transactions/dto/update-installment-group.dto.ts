@@ -1,4 +1,5 @@
-import { IsBoolean, IsDateString, IsEnum, IsOptional, IsString, IsUUID, MinLength } from 'class-validator';
+import { IsBoolean, IsDateString, IsEnum, IsIn, IsOptional, IsString, IsUUID, MinLength } from 'class-validator';
+// IsEnum kept for TransactionType (TS enum); IsIn used for string-literal scope
 import { TransactionType, InstallmentGroupScope } from '@zenith/shared';
 
 export class UpdateInstallmentGroupDto {
@@ -20,7 +21,11 @@ export class UpdateInstallmentGroupDto {
   countsInTotal?: boolean;
 
   @IsOptional()
-  @IsEnum(['all', 'before', 'up_to'])
+  @IsUUID()
+  walletId?: string;
+
+  @IsOptional()
+  @IsIn(['all', 'before', 'up_to'])
   scope?: InstallmentGroupScope;
 
   @IsOptional()
