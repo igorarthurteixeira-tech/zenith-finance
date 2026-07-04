@@ -2,11 +2,14 @@ import { TransactionType } from '@zenith/shared';
 import { useAccounts } from '../context/AccountContext';
 import { useCategories } from '../hooks/useCategories';
 import { CategoryForm } from '../components/categories/CategoryForm';
+import { Spinner } from '../components/ui/Spinner';
+import { useAsyncSet } from '../hooks/useAsyncAction';
 
 export function CategoriesPage() {
   const { activeAccount } = useAccounts();
   const { categories, isLoading, create, remove, seedDefaults, isSeedingDefaults } =
     useCategories(activeAccount?.id ?? null);
+  const { pendingIds: removingIds, run: runRemove } = useAsyncSet();
 
   if (!activeAccount) return <p>Nenhuma conta selecionada.</p>;
 
@@ -32,8 +35,9 @@ export function CategoriesPage() {
               className="btn-secondary"
               onClick={() => seedDefaults()}
               disabled={isSeedingDefaults}
+              aria-busy={isSeedingDefaults}
             >
-              {isSeedingDefaults ? 'Criando...' : 'Criar categorias padrão'}
+              {isSeedingDefaults ? <><Spinner /> Criando…</> : 'Criar categorias padrão'}
             </button>
           </div>
         ) : (
@@ -44,9 +48,7 @@ export function CategoriesPage() {
                 <span
                   className={
                     'badge ' +
-                    (category.type === TransactionType.EXPENSE
-                      ? 'badge-negative'
-                      : 'badge-positive')
+                    (category.type === TransactionType.EXPENSE ? 'badge-negative' : 'badge-positive')
                   }
                 >
                   {category.type === TransactionType.EXPENSE ? 'Despesa' : 'Receita'}
@@ -54,10 +56,12 @@ export function CategoriesPage() {
                 <button
                   type="button"
                   className="btn-icon"
-                  onClick={() => remove(category.id)}
+                  onClick={() => runRemove(category.id, () => remove(category.id))}
+                  disabled={removingIds.has(category.id)}
+                  aria-busy={removingIds.has(category.id)}
                   aria-label="Remover"
                 >
-                  ×
+                  {removingIds.has(category.id) ? <Spinner /> : '×'}
                 </button>
               </li>
             ))}

@@ -9,6 +9,8 @@ import {
 import { useAccounts } from '../context/AccountContext';
 import { useInvestments } from '../hooks/useInvestments';
 import { useWallets } from '../hooks/useWallets';
+import { Spinner } from '../components/ui/Spinner';
+import { useAsyncAction, useAsyncSet } from '../hooks/useAsyncAction';
 
 const INVESTMENT_TYPE_LABELS: Record<InvestmentType, string> = {
   [InvestmentType.CDB]: 'CDB',
@@ -70,6 +72,9 @@ export function InvestmentsPage() {
   const { investments, isLoading, create, remove } = useInvestments(accountId);
   const { wallets } = useWallets(accountId);
 
+  const { isPending: isSubmitting, run: runCreate } = useAsyncAction();
+  const { pendingIds: removingIds, run: runRemove } = useAsyncSet();
+
   const [isCreating, setIsCreating] = useState(false);
   const [name, setName] = useState('');
   const [type, setType] = useState<InvestmentType>(InvestmentType.CDB);
@@ -98,24 +103,26 @@ export function InvestmentsPage() {
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     if (!name.trim() || !principal || !rate) return;
-    await create({
-      name,
-      type,
-      liquidity,
-      principal,
-      rate,
-      cdbModalidade: type === InvestmentType.CDB ? cdbModalidade : undefined,
-      cdiRate: isLimiteGarantido ? cdiRate : undefined,
-      cardWalletId: isLimiteGarantido && cardWalletId ? cardWalletId : undefined,
-      startDate: new Date(startDate).toISOString(),
-      maturityDate: maturityDate ? new Date(maturityDate).toISOString() : undefined,
+    await runCreate(async () => {
+      await create({
+        name,
+        type,
+        liquidity,
+        principal,
+        rate,
+        cdbModalidade: type === InvestmentType.CDB ? cdbModalidade : undefined,
+        cdiRate: isLimiteGarantido ? cdiRate : undefined,
+        cardWalletId: isLimiteGarantido && cardWalletId ? cardWalletId : undefined,
+        startDate: new Date(startDate).toISOString(),
+        maturityDate: maturityDate ? new Date(maturityDate).toISOString() : undefined,
+      });
+      setName('');
+      setPrincipal('');
+      setRate('');
+      setMaturityDate('');
+      setCardWalletId('');
+      setIsCreating(false);
     });
-    setName('');
-    setPrincipal('');
-    setRate('');
-    setMaturityDate('');
-    setCardWalletId('');
-    setIsCreating(false);
   }
 
   const totalInvested = investments.reduce((s, i) => s + Number(i.principal), 0);
@@ -240,8 +247,10 @@ export function InvestmentsPage() {
               </label>
             )}
 
-            <button type="submit">Adicionar</button>
-            <button type="button" className="btn-ghost btn-sm" onClick={() => setIsCreating(false)}>
+            <button type="submit" disabled={isSubmitting} aria-busy={isSubmitting}>
+              {isSubmitting ? <><Spinner /> Adicionando…</> : 'Adicionar'}
+            </button>
+            <button type="button" className="btn-ghost btn-sm" onClick={() => setIsCreating(false)} disabled={isSubmitting}>
               Cancelar
             </button>
           </form>
@@ -309,10 +318,12 @@ export function InvestmentsPage() {
                   <button
                     type="button"
                     className="btn-icon"
-                    onClick={() => remove(inv.id)}
+                    onClick={() => runRemove(inv.id, () => remove(inv.id))}
+                    disabled={removingIds.has(inv.id)}
+                    aria-busy={removingIds.has(inv.id)}
                     aria-label="Remover"
                   >
-                    ×
+                    {removingIds.has(inv.id) ? <Spinner /> : '×'}
                   </button>
                 </li>
               );

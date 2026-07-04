@@ -1,5 +1,7 @@
 import { useState, useEffect, type FormEvent } from 'react';
 import { TransactionType, type CategoryDto, type WalletDto, type TransactionDto } from '@zenith/shared';
+import { Spinner } from '../ui/Spinner';
+import { useAsyncAction } from '../../hooks/useAsyncAction';
 
 interface TransactionFormProps {
   categories: CategoryDto[];
@@ -18,6 +20,7 @@ interface TransactionFormProps {
 
 export function TransactionForm({ categories, wallets, onSubmit, onCancel, initialValues }: TransactionFormProps) {
   const isEditing = !!initialValues;
+  const { isPending, run } = useAsyncAction();
 
   const [description, setDescription] = useState(initialValues?.description ?? '');
   const [amount, setAmount] = useState(initialValues?.amount ?? '');
@@ -42,18 +45,20 @@ export function TransactionForm({ categories, wallets, onSubmit, onCancel, initi
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
     if (!description.trim() || !amount || !walletId) return;
-    await onSubmit({
-      description,
-      amount,
-      type,
-      date: new Date(date).toISOString(),
-      categoryId: categoryId || undefined,
-      walletId,
+    await run(async () => {
+      await onSubmit({
+        description,
+        amount,
+        type,
+        date: new Date(date).toISOString(),
+        categoryId: categoryId || undefined,
+        walletId,
+      });
+      if (!isEditing) {
+        setDescription('');
+        setAmount('');
+      }
     });
-    if (!isEditing) {
-      setDescription('');
-      setAmount('');
-    }
   }
 
   const filteredCategories = categories.filter((c) => c.type === type);
@@ -64,6 +69,7 @@ export function TransactionForm({ categories, wallets, onSubmit, onCancel, initi
         placeholder="Descrição"
         value={description}
         onChange={(e) => setDescription(e.target.value)}
+        disabled={isPending}
       />
       <input
         placeholder="Valor"
@@ -72,8 +78,9 @@ export function TransactionForm({ categories, wallets, onSubmit, onCancel, initi
         min="0"
         value={amount}
         onChange={(e) => setAmount(e.target.value)}
+        disabled={isPending}
       />
-      <select value={type} onChange={(e) => setType(e.target.value as TransactionType)}>
+      <select value={type} onChange={(e) => setType(e.target.value as TransactionType)} disabled={isPending}>
         <option value={TransactionType.EXPENSE}>Despesa</option>
         <option value={TransactionType.INCOME}>Receita</option>
       </select>
@@ -81,6 +88,7 @@ export function TransactionForm({ categories, wallets, onSubmit, onCancel, initi
         value={walletId}
         onChange={(e) => setWalletId(e.target.value)}
         required
+        disabled={isPending}
         style={!walletId ? { borderColor: 'var(--color-negative)' } : undefined}
       >
         {wallets.length === 0 && <option value="">Nenhuma conta cadastrada</option>}
@@ -88,7 +96,7 @@ export function TransactionForm({ categories, wallets, onSubmit, onCancel, initi
           <option key={w.id} value={w.id}>{w.name}</option>
         ))}
       </select>
-      <select value={categoryId} onChange={(e) => setCategoryId(e.target.value)}>
+      <select value={categoryId} onChange={(e) => setCategoryId(e.target.value)} disabled={isPending}>
         <option value="">Sem categoria</option>
         {filteredCategories.map((category) => (
           <option key={category.id} value={category.id}>
@@ -96,10 +104,14 @@ export function TransactionForm({ categories, wallets, onSubmit, onCancel, initi
           </option>
         ))}
       </select>
-      <input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
-      <button type="submit">{isEditing ? 'Salvar' : 'Adicionar'}</button>
+      <input type="date" value={date} onChange={(e) => setDate(e.target.value)} disabled={isPending} />
+      <button type="submit" disabled={isPending} aria-busy={isPending}>
+        {isPending
+          ? <><Spinner /> {isEditing ? 'Salvando…' : 'Adicionando…'}</>
+          : isEditing ? 'Salvar' : 'Adicionar'}
+      </button>
       {onCancel && (
-        <button type="button" className="btn-ghost btn-sm" onClick={onCancel}>
+        <button type="button" className="btn-ghost btn-sm" onClick={onCancel} disabled={isPending}>
           Cancelar
         </button>
       )}

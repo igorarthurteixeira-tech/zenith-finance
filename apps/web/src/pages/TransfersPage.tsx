@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAccounts } from '../context/AccountContext';
 import { transfersApi } from '../api/transfers';
 import { ApiError } from '../api/client';
+import { Spinner } from '../components/ui/Spinner';
 
 export function TransfersPage() {
   const { accounts, activeAccount } = useAccounts();
@@ -81,8 +82,10 @@ export function TransfersPage() {
               value={description}
               onChange={(e) => setDescription(e.target.value)}
             />
-            <button type="submit" className="btn-primary" disabled={createMutation.isPending}>
-              Transferir
+            <button type="submit" className="btn-primary" disabled={createMutation.isPending} aria-busy={createMutation.isPending}>
+              {createMutation.isPending
+                ? <><Spinner /> Transferindo…</>
+                : 'Transferir'}
             </button>
           </form>
         )}

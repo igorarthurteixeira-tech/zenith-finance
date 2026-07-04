@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { TransactionType, type TransactionDto, type CategoryDto, type WalletDto, type UpdateTransactionInput } from '@zenith/shared';
 import { TransactionForm } from './TransactionForm';
 import { Modal } from '../ui/Modal';
+import { Spinner } from '../ui/Spinner';
+import { useAsyncSet } from '../../hooks/useAsyncAction';
 import { formatDateOnly } from '../../utils/formatDate';
 
 interface TransactionListProps {
@@ -74,6 +76,7 @@ function formatBRL(value: number) {
 
 export function TransactionList({ transactions, categories, wallets, onRemove, onUpdate, viewMode }: TransactionListProps) {
   const [editingTransaction, setEditingTransaction] = useState<TransactionDto | null>(null);
+  const { pendingIds: removingIds, run: runRemove } = useAsyncSet();
 
   if (transactions.length === 0) {
     return <p className="muted">Nenhuma transação ainda.</p>;
@@ -125,11 +128,13 @@ export function TransactionList({ transactions, categories, wallets, onRemove, o
                     <button
                       type="button"
                       className="btn-icon"
-                      onClick={() => onRemove(t.id)}
+                      onClick={() => runRemove(t.id, () => onRemove(t.id))}
+                      disabled={removingIds.has(t.id)}
+                      aria-busy={removingIds.has(t.id)}
                       aria-label="Remover"
                       title="Remover"
                     >
-                      ×
+                      {removingIds.has(t.id) ? <Spinner /> : '×'}
                     </button>
                   </div>
                 </li>

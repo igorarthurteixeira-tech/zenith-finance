@@ -1,21 +1,27 @@
 import { useState, type FormEvent } from 'react';
 import { useAccounts } from '../../context/AccountContext';
 import { useWallets } from '../../hooks/useWallets';
+import { Spinner } from '../ui/Spinner';
+import { useAsyncAction, useAsyncSet } from '../../hooks/useAsyncAction';
 
 export function WalletSection() {
   const { activeAccount } = useAccounts();
   const { wallets, create, remove } = useWallets(activeAccount?.id ?? null);
   const [isCreating, setIsCreating] = useState(false);
   const [newName, setNewName] = useState('');
+  const { isPending: isCreatingWallet, run: runCreate } = useAsyncAction();
+  const { pendingIds: removingIds, run: runRemove } = useAsyncSet();
 
   if (!activeAccount) return null;
 
   async function handleCreate(e: FormEvent) {
     e.preventDefault();
     if (!newName.trim()) return;
-    await create({ name: newName });
-    setNewName('');
-    setIsCreating(false);
+    await runCreate(async () => {
+      await create({ name: newName });
+      setNewName('');
+      setIsCreating(false);
+    });
   }
 
   return (
@@ -31,10 +37,12 @@ export function WalletSection() {
               <button
                 type="button"
                 className="btn-icon sidebar-wallet-remove"
-                onClick={() => remove(w.id)}
+                onClick={() => runRemove(w.id, () => remove(w.id))}
+                disabled={removingIds.has(w.id)}
+                aria-busy={removingIds.has(w.id)}
                 aria-label="Remover conta"
               >
-                ×
+                {removingIds.has(w.id) ? <Spinner /> : '×'}
               </button>
             </li>
           ))}
@@ -49,20 +57,19 @@ export function WalletSection() {
             value={newName}
             onChange={(e) => setNewName(e.target.value)}
             autoFocus
+            disabled={isCreatingWallet}
           />
           <div className="sidebar-wallet-form-actions">
-            <button type="submit" className="btn-primary btn-sm">Criar</button>
-            <button type="button" className="btn-ghost btn-sm" onClick={() => setIsCreating(false)}>
+            <button type="submit" className="btn-primary btn-sm" disabled={isCreatingWallet} aria-busy={isCreatingWallet}>
+              {isCreatingWallet ? <><Spinner /> Criando…</> : 'Criar'}
+            </button>
+            <button type="button" className="btn-ghost btn-sm" onClick={() => setIsCreating(false)} disabled={isCreatingWallet}>
               Cancelar
             </button>
           </div>
         </form>
       ) : (
-        <button
-          type="button"
-          className="sidebar-wallet-add"
-          onClick={() => setIsCreating(true)}
-        >
+        <button type="button" className="sidebar-wallet-add" onClick={() => setIsCreating(true)}>
           + Nova conta
         </button>
       )}

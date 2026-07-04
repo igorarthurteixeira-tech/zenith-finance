@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { ApiError } from '../api/client';
+import { Spinner } from '../components/ui/Spinner';
 
 export function LoginPage() {
   const { login } = useAuth();
@@ -54,8 +55,8 @@ export function LoginPage() {
             minLength={8}
           />
         </label>
-        <button type="submit" className="btn-primary btn-block" disabled={isSubmitting}>
-          {isSubmitting ? 'Entrando...' : 'Entrar'}
+        <button type="submit" className="btn-primary btn-block" disabled={isSubmitting} aria-busy={isSubmitting}>
+          {isSubmitting ? <><Spinner /> Entrando…</> : 'Entrar'}
         </button>
         <p className="auth-footer-text">
           Não tem conta? <Link to="/register">Cadastre-se</Link>
