@@ -1,5 +1,6 @@
 import { NavLink, Outlet } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { useViewMode, VIEW_MODE_OPTIONS } from '../../context/ViewModeContext';
 import { AccountSwitcher } from './AccountSwitcher';
 import { WalletSection } from './WalletSection';
 
@@ -15,6 +16,7 @@ const NAV_ITEMS = [
 
 export function AppLayout() {
   const { user, logout } = useAuth();
+  const { viewMode, setViewMode } = useViewMode();
 
   return (
     <div className="app-shell">
@@ -57,6 +59,18 @@ export function AppLayout() {
       <div className="app-content">
         <header className="app-topbar">
           <AccountSwitcher />
+          <div className="topbar-view-mode">
+            {VIEW_MODE_OPTIONS.map((opt) => (
+              <button
+                key={opt.value}
+                type="button"
+                className={`topbar-view-btn${viewMode === opt.value ? ' active' : ''}`}
+                onClick={() => setViewMode(opt.value)}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
         </header>
         <main className="app-main">
           <Outlet />

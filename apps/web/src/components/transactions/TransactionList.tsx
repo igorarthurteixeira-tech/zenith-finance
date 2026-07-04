@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { TransactionType, type TransactionDto, type CategoryDto, type WalletDto, type UpdateTransactionInput } from '@zenith/shared';
+import type { ViewMode } from '../../context/ViewModeContext';
 import { TransactionForm } from './TransactionForm';
 import { Modal } from '../ui/Modal';
 import { Spinner } from '../ui/Spinner';
@@ -16,7 +17,7 @@ interface TransactionListProps {
   viewMode: ViewMode;
 }
 
-export type ViewMode = 'monthly' | 'quarterly' | 'semester' | 'annual';
+export type { ViewMode };
 
 interface MonthGroup {
   label: string;

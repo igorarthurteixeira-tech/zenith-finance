@@ -2,6 +2,7 @@ import { TransactionType } from '@zenith/shared';
 import { useAccounts } from '../context/AccountContext';
 import { useTransactions } from '../hooks/useTransactions';
 import { useWallets } from '../hooks/useWallets';
+import { useViewMode, getPeriodRange } from '../context/ViewModeContext';
 import { formatDateTime } from '../utils/formatDate';
 
 function formatCurrency(value: number) {
@@ -12,24 +13,24 @@ export function DashboardPage() {
   const { activeAccount } = useAccounts();
   const { transactions, isLoading } = useTransactions(activeAccount?.id ?? null);
   const { wallets } = useWallets(activeAccount?.id ?? null);
+  const { viewMode } = useViewMode();
 
   const now = new Date();
-  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-  const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
   const todayEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+  const { start: periodStart, end: periodEnd, label: periodLabel } = getPeriodRange(viewMode, now);
 
-  const thisMonth = transactions.filter((t) => {
+  const inPeriod = transactions.filter((t) => {
     const d = new Date(t.date);
-    return t.countsInTotal && d >= monthStart && d <= monthEnd;
+    return t.countsInTotal && d >= periodStart && d <= periodEnd;
   });
   const realized = transactions.filter(
     (t) => t.countsInTotal && new Date(t.date) <= todayEnd,
   );
 
-  const income = thisMonth
+  const income = inPeriod
     .filter((t) => t.type === TransactionType.INCOME)
     .reduce((sum, t) => sum + Number(t.amount), 0);
-  const expense = thisMonth
+  const expense = inPeriod
     .filter((t) => t.type === TransactionType.EXPENSE)
     .reduce((sum, t) => sum + Number(t.amount), 0);
 
@@ -56,11 +57,13 @@ export function DashboardPage() {
           <span className="stat-value">{formatCurrency(balance)}</span>
         </div>
         <div className="stat-card">
-          <span className="stat-label">Receitas do mês</span>
+          <span className="stat-label">Receitas</span>
+          <span className="stat-period-label">{periodLabel}</span>
           <span className="stat-value positive">{formatCurrency(income)}</span>
         </div>
         <div className="stat-card">
-          <span className="stat-label">Despesas do mês</span>
+          <span className="stat-label">Despesas</span>
+          <span className="stat-period-label">{periodLabel}</span>
           <span className="stat-value negative">{formatCurrency(expense)}</span>
         </div>
       </div>

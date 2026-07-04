@@ -12,17 +12,11 @@ import { useAccounts } from '../context/AccountContext';
 import { useTransactions } from '../hooks/useTransactions';
 import { useCategories } from '../hooks/useCategories';
 import { useWallets } from '../hooks/useWallets';
+import { useViewMode } from '../context/ViewModeContext';
 import { TransactionForm } from '../components/transactions/TransactionForm';
-import { TransactionList, type ViewMode } from '../components/transactions/TransactionList';
+import { TransactionList } from '../components/transactions/TransactionList';
 import { SpendingHistoryChart } from '../components/charts/SpendingHistoryChart';
 import { CreditCardSection } from '../components/wallets/CreditCardSection';
-
-const VIEW_MODES: { value: ViewMode; label: string }[] = [
-  { value: 'monthly', label: 'Mensal' },
-  { value: 'quarterly', label: 'Trimestral' },
-  { value: 'semester', label: 'Semestral' },
-  { value: 'annual', label: 'Anual' },
-];
 
 export function TransactionsPage() {
   const { activeAccount } = useAccounts();
@@ -38,7 +32,7 @@ export function TransactionsPage() {
   } = useTransactions(accountId);
   const { categories } = useCategories(accountId);
   const { wallets, create: createWallet, update: updateWallet } = useWallets(accountId);
-  const [viewMode, setViewMode] = useState<ViewMode>('monthly');
+  const { viewMode } = useViewMode();
   const [searchParams, setSearchParams] = useSearchParams();
   const walletId = searchParams.get('walletId');
   const activeWallet = walletId ? wallets.find((w) => w.id === walletId) : null;
@@ -143,8 +137,8 @@ export function TransactionsPage() {
         />
       </div>
 
-      <div className="view-mode-bar">
-        {activeWallet && (
+      {activeWallet && (
+        <div className="view-mode-bar">
           <span className="wallet-filter-tag">
             {activeWallet.name}
             <button
@@ -156,20 +150,8 @@ export function TransactionsPage() {
               ×
             </button>
           </span>
-        )}
-        <div className="view-mode-group">
-          {VIEW_MODES.map((mode) => (
-            <button
-              key={mode.value}
-              type="button"
-              className={`view-mode-btn${viewMode === mode.value ? ' active' : ''}`}
-              onClick={() => setViewMode(mode.value)}
-            >
-              {mode.label}
-            </button>
-          ))}
         </div>
-      </div>
+      )}
 
       <div className="card">
         {isLoading ? (

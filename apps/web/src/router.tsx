@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
 import { AccountProvider } from './context/AccountContext';
+import { ViewModeProvider } from './context/ViewModeContext';
 import { AppLayout } from './components/layout/AppLayout';
 import { LoadingScreen } from './components/ui/LoadingScreen';
 import { LoginPage } from './pages/LoginPage';
@@ -18,7 +19,7 @@ function ProtectedRoute({ children }: { children: ReactNode }) {
   const { user, isLoading } = useAuth();
   if (isLoading) return <LoadingScreen />;
   if (!user) return <Navigate to="/login" replace />;
-  return <AccountProvider>{children}</AccountProvider>;
+  return <AccountProvider><ViewModeProvider>{children}</ViewModeProvider></AccountProvider>;
 }
 
 export function AppRouter() {
