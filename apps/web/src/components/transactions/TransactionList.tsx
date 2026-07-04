@@ -10,7 +10,7 @@ interface TransactionListProps {
   transactions: TransactionDto[];
   categories: CategoryDto[];
   wallets: WalletDto[];
-  onRemove: (transactionId: string) => void;
+  onRemove: (transactionId: string) => Promise<void>;
   onUpdate: (transactionId: string, input: UpdateTransactionInput) => Promise<unknown>;
   viewMode: ViewMode;
 }
