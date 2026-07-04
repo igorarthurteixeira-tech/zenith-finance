@@ -82,6 +82,8 @@ export interface TransactionDto {
   type: TransactionType;
   date: string;
   invoicePeriod: string | null;
+  countsInTotal: boolean;
+  installmentGroupId: string | null;
   accountId: string;
   categoryId: string | null;
   walletId: string | null;
@@ -118,7 +120,7 @@ export interface CreateInstallmentPurchaseInput {
   totalInstallments: number;
   startInstallment: number;
   startInvoicePeriod: string;
-  includePastInstallments: boolean;
+  countPastInstallments: boolean;
 }
 
 export interface TransferDto {

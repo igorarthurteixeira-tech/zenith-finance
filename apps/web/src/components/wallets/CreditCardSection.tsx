@@ -56,10 +56,10 @@ export function CreditCardSection({
               return effectivePeriod === openPeriod;
             });
             const income = currentPeriodTransactions
-              .filter((t) => t.type === TransactionType.INCOME)
+              .filter((t) => t.type === TransactionType.INCOME && t.countsInTotal)
               .reduce((sum, t) => sum + Number(t.amount), 0);
             const expense = currentPeriodTransactions
-              .filter((t) => t.type === TransactionType.EXPENSE)
+              .filter((t) => t.type === TransactionType.EXPENSE && t.countsInTotal)
               .reduce((sum, t) => sum + Number(t.amount), 0);
             // A fatura atual soma a dívida que já existia antes de usar o app
             // (initialBalance) com o líquido lançado no ciclo aberto agora.

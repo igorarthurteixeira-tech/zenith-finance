@@ -53,4 +53,15 @@ export class TransactionsController {
   remove(@Param('transactionId') transactionId: string) {
     return this.transactionsService.remove(transactionId);
   }
+
+  @Delete('installments/group/:installmentGroupId')
+  removeInstallmentGroup(
+    @Param('accountId') accountId: string,
+    @Param('installmentGroupId') installmentGroupId: string,
+  ) {
+    return this.transactionsService.removeInstallmentGroup(
+      accountId,
+      installmentGroupId,
+    );
+  }
 }

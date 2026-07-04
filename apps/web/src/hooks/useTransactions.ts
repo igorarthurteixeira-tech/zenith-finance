@@ -40,6 +40,12 @@ export function useTransactions(accountId: string | null) {
     onSuccess: () => queryClient.invalidateQueries({ queryKey }),
   });
 
+  const removeInstallmentGroupMutation = useMutation({
+    mutationFn: (installmentGroupId: string) =>
+      transactionsApi.removeInstallmentGroup(accountId!, installmentGroupId),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey }),
+  });
+
   return {
     transactions: query.data ?? [],
     isLoading: query.isLoading,
@@ -47,5 +53,6 @@ export function useTransactions(accountId: string | null) {
     update: updateMutation.mutateAsync,
     remove: removeMutation.mutateAsync,
     createInstallmentPurchase: createInstallmentPurchaseMutation.mutateAsync,
+    removeInstallmentGroup: removeInstallmentGroupMutation.mutateAsync,
   };
 }

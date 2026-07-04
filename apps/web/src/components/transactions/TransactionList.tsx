@@ -11,6 +11,7 @@ interface TransactionListProps {
   categories: CategoryDto[];
   wallets: WalletDto[];
   onRemove: (transactionId: string) => Promise<void>;
+  onRemoveGroup?: (installmentGroupId: string) => Promise<unknown>;
   onUpdate: (transactionId: string, input: UpdateTransactionInput) => Promise<unknown>;
   viewMode: ViewMode;
 }
@@ -64,8 +65,12 @@ function groupTransactions(transactions: TransactionDto[], mode: ViewMode): Mont
   return Array.from(map.entries())
     .sort(([a], [b]) => b.localeCompare(a))
     .map(([key, txs]) => {
-      const totalIncome = txs.filter((t) => t.type === TransactionType.INCOME).reduce((s, t) => s + Number(t.amount), 0);
-      const totalExpense = txs.filter((t) => t.type === TransactionType.EXPENSE).reduce((s, t) => s + Number(t.amount), 0);
+      const totalIncome = txs
+        .filter((t) => t.type === TransactionType.INCOME && t.countsInTotal)
+        .reduce((s, t) => s + Number(t.amount), 0);
+      const totalExpense = txs
+        .filter((t) => t.type === TransactionType.EXPENSE && t.countsInTotal)
+        .reduce((s, t) => s + Number(t.amount), 0);
       return { key, label: getPeriodLabel(key, mode), transactions: txs, totalIncome, totalExpense };
     });
 }
@@ -74,9 +79,26 @@ function formatBRL(value: number) {
   return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 }
 
-export function TransactionList({ transactions, categories, wallets, onRemove, onUpdate, viewMode }: TransactionListProps) {
+export function TransactionList({
+  transactions,
+  categories,
+  wallets,
+  onRemove,
+  onRemoveGroup,
+  onUpdate,
+  viewMode,
+}: TransactionListProps) {
   const [editingTransaction, setEditingTransaction] = useState<TransactionDto | null>(null);
   const { pendingIds: removingIds, run: runRemove } = useAsyncSet();
+
+  function handleRemoveGroup(installmentGroupId: string) {
+    if (!onRemoveGroup) return;
+    const confirmed = window.confirm(
+      'Excluir todas as parcelas dessa compra parcelada? Essa ação não pode ser desfeita.',
+    );
+    if (!confirmed) return;
+    runRemove(installmentGroupId, () => onRemoveGroup(installmentGroupId));
+  }
 
   if (transactions.length === 0) {
     return <p className="muted">Nenhuma transação ainda.</p>;
@@ -110,8 +132,16 @@ export function TransactionList({ transactions, categories, wallets, onRemove, o
                         {wallets.find((w) => w.id === t.walletId)?.name}
                       </span>
                     )}
+                    {!t.countsInTotal && (
+                      <span className="transaction-badge" title="Já contabilizada em outro lugar — não soma no total">
+                        histórico
+                      </span>
+                    )}
                   </div>
-                  <span className={t.type === TransactionType.INCOME ? 'positive' : 'negative'}>
+                  <span
+                    className={t.type === TransactionType.INCOME ? 'positive' : 'negative'}
+                    style={!t.countsInTotal ? { opacity: 0.55 } : undefined}
+                  >
                     {t.type === TransactionType.INCOME ? '+' : '-'}
                     {formatBRL(Number(t.amount))}
                   </span>
@@ -125,6 +155,19 @@ export function TransactionList({ transactions, categories, wallets, onRemove, o
                     >
                       ✎
                     </button>
+                    {t.installmentGroupId && onRemoveGroup && (
+                      <button
+                        type="button"
+                        className="btn-icon"
+                        onClick={() => handleRemoveGroup(t.installmentGroupId!)}
+                        disabled={removingIds.has(t.installmentGroupId)}
+                        aria-busy={removingIds.has(t.installmentGroupId)}
+                        aria-label="Excluir parcelamento inteiro"
+                        title="Excluir parcelamento inteiro (todas as parcelas)"
+                      >
+                        {removingIds.has(t.installmentGroupId) ? <Spinner /> : '🗑'}
+                      </button>
+                    )}
                     <button
                       type="button"
                       className="btn-icon"
@@ -132,7 +175,7 @@ export function TransactionList({ transactions, categories, wallets, onRemove, o
                       disabled={removingIds.has(t.id)}
                       aria-busy={removingIds.has(t.id)}
                       aria-label="Remover"
-                      title="Remover"
+                      title="Remover apenas essa parcela"
                     >
                       {removingIds.has(t.id) ? <Spinner /> : '×'}
                     </button>

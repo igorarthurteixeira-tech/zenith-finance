@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import { BadRequestException, Injectable } from '@nestjs/common';
 import type { Prisma } from '@prisma/client';
 import {
@@ -74,7 +75,7 @@ export class TransactionsService {
       totalInstallments,
       startInstallment,
       startInvoicePeriod,
-      includePastInstallments,
+      countPastInstallments,
     } = dto;
 
     if (startInstallment > totalInstallments) {
@@ -89,19 +90,22 @@ export class TransactionsService {
         : Math.round(Number(dto.amount) * 100) * totalInstallments;
     const centsByInstallment = splitIntoCents(totalCents, totalInstallments);
 
-    const firstIndex = includePastInstallments ? 0 : startInstallment - 1;
     const baseDate = new Date(dto.date);
+    const installmentGroupId = randomUUID();
 
     const rowsData: Prisma.TransactionUncheckedCreateInput[] = [];
-    for (let index = firstIndex; index < totalInstallments; index++) {
+    for (let index = 0; index < totalInstallments; index++) {
       const installmentNumber = index + 1;
       const offset = installmentNumber - startInstallment;
+      const isPast = installmentNumber < startInstallment;
       rowsData.push({
         description: `${dto.description} (${installmentNumber}/${totalInstallments})`,
         amount: (centsByInstallment[index] / 100).toFixed(2),
         type: dto.type,
         date: shiftDateByMonths(baseDate, offset),
         invoicePeriod: addMonthsToPeriod(startInvoicePeriod, offset),
+        countsInTotal: isPast ? countPastInstallments : true,
+        installmentGroupId,
         accountId,
         categoryId: dto.categoryId,
         walletId: dto.walletId,
@@ -111,5 +115,11 @@ export class TransactionsService {
     return this.prisma.$transaction(
       rowsData.map((data) => this.prisma.transaction.create({ data })),
     );
+  }
+
+  removeInstallmentGroup(accountId: string, installmentGroupId: string) {
+    return this.prisma.transaction.deleteMany({
+      where: { accountId, installmentGroupId },
+    });
   }
 }

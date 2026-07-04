@@ -124,26 +124,29 @@ model Category {
 }
 
 model Transaction {
-  id            String          @id @default(uuid())
-  description   String
-  amount        Decimal         @db.Decimal(14, 2)
-  type          TransactionType
-  date          DateTime
-  invoicePeriod String?
-  accountId     String
-  account       Account         @relation(fields: [accountId], references: [id], onDelete: Cascade)
-  categoryId    String?
-  category      Category?       @relation(fields: [categoryId], references: [id], onDelete: SetNull)
-  walletId      String?
-  wallet        Wallet?         @relation(fields: [walletId], references: [id], onDelete: SetNull)
-  createdAt     DateTime        @default(now())
-  updatedAt     DateTime        @updatedAt
+  id                 String          @id @default(uuid())
+  description        String
+  amount             Decimal         @db.Decimal(14, 2)
+  type               TransactionType
+  date               DateTime
+  invoicePeriod      String?
+  countsInTotal      Boolean         @default(true)
+  installmentGroupId String?
+  accountId          String
+  account            Account         @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  categoryId         String?
+  category           Category?       @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  walletId           String?
+  wallet             Wallet?         @relation(fields: [walletId], references: [id], onDelete: SetNull)
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @updatedAt
 
   transferOut Transfer? @relation("originTransaction")
   transferIn  Transfer? @relation("destinationTransaction")
 
   @@index([accountId, date])
   @@index([walletId, invoicePeriod])
+  @@index([installmentGroupId])
 }
 
 model Investment {

@@ -23,4 +23,8 @@ export const transactionsApi = {
     ),
   remove: (accountId: string, transactionId: string) =>
     apiClient.delete<void>(`/accounts/${accountId}/transactions/${transactionId}`),
+  removeInstallmentGroup: (accountId: string, installmentGroupId: string) =>
+    apiClient.delete<void>(
+      `/accounts/${accountId}/transactions/installments/group/${installmentGroupId}`,
+    ),
 };

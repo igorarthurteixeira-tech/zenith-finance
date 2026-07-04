@@ -14,10 +14,10 @@ export function DashboardPage() {
   const { wallets } = useWallets(activeAccount?.id ?? null);
 
   const income = transactions
-    .filter((t) => t.type === TransactionType.INCOME)
+    .filter((t) => t.type === TransactionType.INCOME && t.countsInTotal)
     .reduce((sum, t) => sum + Number(t.amount), 0);
   const expense = transactions
-    .filter((t) => t.type === TransactionType.EXPENSE)
+    .filter((t) => t.type === TransactionType.EXPENSE && t.countsInTotal)
     .reduce((sum, t) => sum + Number(t.amount), 0);
   // Saldos iniciais (ou dívidas já existentes) entram no saldo total, mas não
   // são receita nem despesa de fato — por isso ficam de fora de income/expense.

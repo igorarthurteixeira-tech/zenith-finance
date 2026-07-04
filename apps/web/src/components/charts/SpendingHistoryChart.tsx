@@ -25,6 +25,7 @@ function buildPoints(transactions: TransactionDto[], wallets: WalletDto[]): Char
 
   const dayDeltas = new Map<string, number>();
   for (const t of transactions) {
+    if (!t.countsInTotal) continue;
     const key = dateKeyOf(new Date(t.date));
     const delta = t.type === TransactionType.INCOME ? Number(t.amount) : -Number(t.amount);
     dayDeltas.set(key, (dayDeltas.get(key) ?? 0) + delta);

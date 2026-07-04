@@ -53,5 +53,5 @@ export class CreateInstallmentPurchaseDto {
   startInvoicePeriod: string;
 
   @IsBoolean()
-  includePastInstallments: boolean;
+  countPastInstallments: boolean;
 }

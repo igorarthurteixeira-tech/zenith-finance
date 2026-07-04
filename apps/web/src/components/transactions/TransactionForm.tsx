@@ -70,7 +70,7 @@ export function TransactionForm({
   const [amountMode, setAmountMode] = useState<InstallmentAmountMode>(InstallmentAmountMode.TOTAL);
   const [totalInstallments, setTotalInstallments] = useState('2');
   const [startInstallment, setStartInstallment] = useState('1');
-  const [includePastInstallments, setIncludePastInstallments] = useState(true);
+  const [countPastInstallments, setCountPastInstallments] = useState(true);
 
   const selectedWallet = wallets.find((w) => w.id === walletId);
   const isCardWallet = selectedWallet?.type === WalletType.CARTAO_CREDITO;
@@ -124,7 +124,7 @@ export function TransactionForm({
           totalInstallments: totalInstallmentsNum,
           startInstallment: startInstallmentNum,
           startInvoicePeriod: invoicePeriod,
-          includePastInstallments: startInstallmentNum > 1 ? includePastInstallments : true,
+          countPastInstallments: startInstallmentNum > 1 ? countPastInstallments : true,
         });
         setDescription('');
         setAmount('');
@@ -258,12 +258,14 @@ export function TransactionForm({
             <label className="installment-toggle">
               <input
                 type="checkbox"
-                checked={includePastInstallments}
-                onChange={(e) => setIncludePastInstallments(e.target.checked)}
+                checked={countPastInstallments}
+                onChange={(e) => setCountPastInstallments(e.target.checked)}
                 disabled={isPending}
               />
-              Lançar também as parcelas 1 a {startInstallmentNum - 1} no histórico (ainda não foram
-              contabilizadas em outro lugar)
+              As parcelas 1 a {startInstallmentNum - 1} ainda não foram contabilizadas em nenhum
+              lugar (somar no total das respectivas faturas). Se desmarcar, elas entram só no
+              histórico, sem somar (use quando já estiverem contabilizadas em outro lugar, como no
+              saldo inicial do cartão).
             </label>
           )}
         </div>

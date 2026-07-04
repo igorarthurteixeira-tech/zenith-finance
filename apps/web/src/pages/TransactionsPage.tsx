@@ -27,8 +27,15 @@ const VIEW_MODES: { value: ViewMode; label: string }[] = [
 export function TransactionsPage() {
   const { activeAccount } = useAccounts();
   const accountId = activeAccount?.id ?? null;
-  const { transactions, isLoading, create, createInstallmentPurchase, update, remove } =
-    useTransactions(accountId);
+  const {
+    transactions,
+    isLoading,
+    create,
+    createInstallmentPurchase,
+    update,
+    remove,
+    removeInstallmentGroup,
+  } = useTransactions(accountId);
   const { categories } = useCategories(accountId);
   const { wallets, create: createWallet, update: updateWallet } = useWallets(accountId);
   const [viewMode, setViewMode] = useState<ViewMode>('monthly');
@@ -173,6 +180,7 @@ export function TransactionsPage() {
             categories={categories}
             wallets={wallets}
             onRemove={remove}
+            onRemoveGroup={removeInstallmentGroup}
             onUpdate={handleUpdate}
             viewMode={viewMode}
           />
