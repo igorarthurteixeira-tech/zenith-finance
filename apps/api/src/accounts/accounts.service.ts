@@ -20,6 +20,9 @@ export class AccountsService {
       data: { name: dto.name, type: dto.type, ownerId: userId },
     });
     await seedDefaultCategories(this.prisma, account.id, dto.type);
+    await this.prisma.wallet.create({
+      data: { name: 'Carteira', accountId: account.id },
+    });
     return account;
   }
 
