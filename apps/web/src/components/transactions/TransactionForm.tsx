@@ -10,7 +10,7 @@ interface TransactionFormProps {
     type: TransactionType;
     date: string;
     categoryId?: string;
-    walletId?: string;
+    walletId: string;
   }) => Promise<unknown>;
   onCancel?: () => void;
   initialValues?: TransactionDto;
@@ -26,7 +26,7 @@ export function TransactionForm({ categories, wallets, onSubmit, onCancel, initi
     initialValues ? initialValues.date.slice(0, 10) : new Date().toISOString().slice(0, 10),
   );
   const [categoryId, setCategoryId] = useState(initialValues?.categoryId ?? '');
-  const [walletId, setWalletId] = useState(initialValues?.walletId ?? '');
+  const [walletId, setWalletId] = useState(initialValues?.walletId ?? (wallets[0]?.id ?? ''));
 
   useEffect(() => {
     if (initialValues) {
@@ -41,14 +41,14 @@ export function TransactionForm({ categories, wallets, onSubmit, onCancel, initi
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
-    if (!description.trim() || !amount) return;
+    if (!description.trim() || !amount || !walletId) return;
     await onSubmit({
       description,
       amount,
       type,
       date: new Date(date).toISOString(),
       categoryId: categoryId || undefined,
-      walletId: walletId || undefined,
+      walletId,
     });
     if (!isEditing) {
       setDescription('');
@@ -77,16 +77,17 @@ export function TransactionForm({ categories, wallets, onSubmit, onCancel, initi
         <option value={TransactionType.EXPENSE}>Despesa</option>
         <option value={TransactionType.INCOME}>Receita</option>
       </select>
-      {wallets.length > 0 && (
-        <select value={walletId} onChange={(e) => setWalletId(e.target.value)}>
-          <option value="">Sem conta</option>
-          {wallets.map((w) => (
-            <option key={w.id} value={w.id}>
-              {w.name}
-            </option>
-          ))}
-        </select>
-      )}
+      <select
+        value={walletId}
+        onChange={(e) => setWalletId(e.target.value)}
+        required
+        style={!walletId ? { borderColor: 'var(--color-negative)' } : undefined}
+      >
+        {wallets.length === 0 && <option value="">Nenhuma conta cadastrada</option>}
+        {wallets.map((w) => (
+          <option key={w.id} value={w.id}>{w.name}</option>
+        ))}
+      </select>
       <select value={categoryId} onChange={(e) => setCategoryId(e.target.value)}>
         <option value="">Sem categoria</option>
         {filteredCategories.map((category) => (

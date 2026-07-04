@@ -76,7 +76,7 @@ export interface CreateTransactionInput {
   type: TransactionType;
   date: string;
   categoryId?: string;
-  walletId?: string;
+  walletId: string;
 }
 
 export interface UpdateTransactionInput {

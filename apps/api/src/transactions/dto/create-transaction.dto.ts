@@ -27,7 +27,6 @@ export class CreateTransactionDto {
   @IsUUID()
   categoryId?: string;
 
-  @IsOptional()
   @IsUUID()
-  walletId?: string;
+  walletId: string;
 }
