@@ -26,7 +26,7 @@ export const transactionsApi = {
     apiClient.delete<void>(`/accounts/${accountId}/transactions/${transactionId}`),
   updateInstallmentGroup: (accountId: string, installmentGroupId: string, input: UpdateInstallmentGroupInput) =>
     apiClient.patch<void>(
-      `/accounts/${accountId}/transactions/installments/group/${installmentGroupId}`,
+      `/accounts/${accountId}/transactions/group/${installmentGroupId}`,
       input,
     ),
   removeInstallmentGroup: (accountId: string, installmentGroupId: string, scope?: string, referenceDate?: string) => {
@@ -35,7 +35,7 @@ export const transactionsApi = {
     if (referenceDate) params.set('referenceDate', referenceDate);
     const qs = params.toString();
     return apiClient.delete<void>(
-      `/accounts/${accountId}/transactions/installments/group/${installmentGroupId}${qs ? `?${qs}` : ''}`,
+      `/accounts/${accountId}/transactions/group/${installmentGroupId}${qs ? `?${qs}` : ''}`,
     );
   },
 };

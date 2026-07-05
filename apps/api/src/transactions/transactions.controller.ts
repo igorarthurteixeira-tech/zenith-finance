@@ -43,7 +43,7 @@ export class TransactionsController {
     return this.transactionsService.createInstallmentPurchase(accountId, dto);
   }
 
-  @Patch('installments/group/:installmentGroupId')
+  @Patch('group/:installmentGroupId')
   updateInstallmentGroup(
     @Param('accountId') accountId: string,
     @Param('installmentGroupId') installmentGroupId: string,
@@ -56,7 +56,7 @@ export class TransactionsController {
     );
   }
 
-  @Delete('installments/group/:installmentGroupId')
+  @Delete('group/:installmentGroupId')
   removeInstallmentGroup(
     @Param('accountId') accountId: string,
     @Param('installmentGroupId') installmentGroupId: string,
