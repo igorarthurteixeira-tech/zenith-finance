@@ -43,19 +43,6 @@ export class TransactionsController {
     return this.transactionsService.createInstallmentPurchase(accountId, dto);
   }
 
-  @Patch(':transactionId')
-  update(
-    @Param('transactionId') transactionId: string,
-    @Body() dto: UpdateTransactionDto,
-  ) {
-    return this.transactionsService.update(transactionId, dto);
-  }
-
-  @Delete(':transactionId')
-  remove(@Param('transactionId') transactionId: string) {
-    return this.transactionsService.remove(transactionId);
-  }
-
   @Patch('installments/group/:installmentGroupId')
   updateInstallmentGroup(
     @Param('accountId') accountId: string,
@@ -82,5 +69,18 @@ export class TransactionsController {
       scope,
       referenceDate,
     );
+  }
+
+  @Patch(':transactionId')
+  update(
+    @Param('transactionId') transactionId: string,
+    @Body() dto: UpdateTransactionDto,
+  ) {
+    return this.transactionsService.update(transactionId, dto);
+  }
+
+  @Delete(':transactionId')
+  remove(@Param('transactionId') transactionId: string) {
+    return this.transactionsService.remove(transactionId);
   }
 }

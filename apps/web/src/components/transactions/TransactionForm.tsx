@@ -1,4 +1,4 @@
-import { useState, useEffect, type FormEvent } from 'react';
+import { useState, useEffect, useRef, type FormEvent } from 'react';
 import {
   TransactionType,
   WalletType,
@@ -72,6 +72,8 @@ export function TransactionForm({
   const [countsInTotal, setCountsInTotal] = useState(initialValues?.countsInTotal ?? true);
   const [groupScope, setGroupScope] = useState<'single' | 'before' | 'up_to' | 'all'>('single');
   const [invoicePeriod, setInvoicePeriod] = useState(initialValues?.invoicePeriod ?? '');
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const prevWalletIdRef = useRef<string>(walletId);
   const [isInstallmentPurchase, setIsInstallmentPurchase] = useState(false);
   const [amountMode, setAmountMode] = useState<InstallmentAmountMode>(InstallmentAmountMode.TOTAL);
   const [totalInstallments, setTotalInstallments] = useState('2');
@@ -102,8 +104,10 @@ export function TransactionForm({
   }, [defaultWalletId]);
 
   useEffect(() => {
-    if (isCardWallet && !initialValues) {
-      setInvoicePeriod((current) => (periods.includes(current) ? current : periods[0]));
+    const walletChanged = prevWalletIdRef.current !== walletId;
+    prevWalletIdRef.current = walletId;
+    if (isCardWallet && (!initialValues || walletChanged)) {
+      setInvoicePeriod((current) => (periods.includes(current) ? current : (periods[0] ?? '')));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [walletId, isCardWallet]);
@@ -116,66 +120,71 @@ export function TransactionForm({
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
+    setSaveError(null);
     if (!description.trim() || !amount || !walletId) return;
 
-    if (isEditing && groupScope !== 'single' && initialValues?.installmentGroupId && onUpdateGroup) {
-      await run(async () => {
-        await onUpdateGroup(initialValues.installmentGroupId!, {
-          description,
-          type,
-          categoryId: categoryId || undefined,
-          walletId,
-          countsInTotal,
-          scope: groupScope,
-          referenceDate: groupScope !== 'all' ? new Date(date).toISOString() : undefined,
+    try {
+      if (isEditing && groupScope !== 'single' && initialValues?.installmentGroupId && onUpdateGroup) {
+        await run(async () => {
+          await onUpdateGroup(initialValues.installmentGroupId!, {
+            description,
+            type,
+            categoryId: categoryId || undefined,
+            walletId,
+            countsInTotal,
+            scope: groupScope,
+            referenceDate: groupScope !== 'all' ? new Date(date).toISOString() : undefined,
+          });
         });
-      });
-      return;
-    }
+        return;
+      }
 
-    if (isInstallmentPurchase && totalInstallmentsNum > 1 && onSubmitInstallments) {
+      if (isInstallmentPurchase && totalInstallmentsNum > 1 && onSubmitInstallments) {
+        await run(async () => {
+          const resolvedStartPeriod = isCardWallet
+            ? (invoicePeriod || periods[0] || periodOfDate(new Date(date)))
+            : periodOfDate(new Date(date));
+          await onSubmitInstallments({
+            description,
+            walletId,
+            categoryId: categoryId || undefined,
+            type,
+            date: new Date(date).toISOString(),
+            amountMode,
+            amount,
+            totalInstallments: totalInstallmentsNum,
+            startInstallment: startInstallmentNum,
+            startInvoicePeriod: resolvedStartPeriod,
+            countPastInstallments: startInstallmentNum > 1 ? countPastInstallments : true,
+          });
+          setDescription('');
+          setAmount('');
+          setIsInstallmentPurchase(false);
+          setTotalInstallments('2');
+          setStartInstallment('1');
+        });
+        return;
+      }
+
       await run(async () => {
-        const resolvedStartPeriod = isCardWallet
-          ? invoicePeriod
-          : periodOfDate(new Date(date));
-        await onSubmitInstallments({
+        await onSubmit({
           description,
-          walletId,
-          categoryId: categoryId || undefined,
+          amount,
           type,
           date: new Date(date).toISOString(),
-          amountMode,
-          amount,
-          totalInstallments: totalInstallmentsNum,
-          startInstallment: startInstallmentNum,
-          startInvoicePeriod: resolvedStartPeriod,
-          countPastInstallments: startInstallmentNum > 1 ? countPastInstallments : true,
+          categoryId: categoryId || undefined,
+          walletId,
+          invoicePeriod: isCardWallet ? (invoicePeriod || periods[0] || undefined) : undefined,
+          ...(isEditing && { countsInTotal }),
         });
-        setDescription('');
-        setAmount('');
-        setIsInstallmentPurchase(false);
-        setTotalInstallments('2');
-        setStartInstallment('1');
+        if (!isEditing) {
+          setDescription('');
+          setAmount('');
+        }
       });
-      return;
+    } catch (err) {
+      setSaveError(err instanceof Error ? err.message : 'Erro ao salvar. Tente novamente.');
     }
-
-    await run(async () => {
-      await onSubmit({
-        description,
-        amount,
-        type,
-        date: new Date(date).toISOString(),
-        categoryId: categoryId || undefined,
-        walletId,
-        invoicePeriod: isCardWallet && invoicePeriod ? invoicePeriod : undefined,
-        ...(isEditing && { countsInTotal }),
-      });
-      if (!isEditing) {
-        setDescription('');
-        setAmount('');
-      }
-    });
   }
 
   const filteredCategories = categories.filter((c) => c.type === type);
@@ -341,6 +350,7 @@ export function TransactionForm({
           Cancelar
         </button>
       )}
+      {saveError && <p className="form-save-error">{saveError}</p>}
     </form>
   );
 }

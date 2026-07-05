@@ -448,6 +448,12 @@ select:focus {
   cursor: pointer;
 }
 
+.form-save-error {
+  color: var(--color-negative);
+  font-size: 0.85rem;
+  margin: 0.25rem 0 0;
+}
+
 .app-main {
   flex: 1;
   padding: 2rem;
